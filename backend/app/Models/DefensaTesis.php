@@ -19,8 +19,11 @@ class DefensaTesis extends Model
     protected $fillable = [
         'id_edicion',
         'titulo_tesis',
+        'nombre_defensa',
+        'imagen_url',
         'autor',
         'tutor',
+        'modalidad',
         'fecha_defensa',
         'hora_defensa',
         'lugar',
@@ -28,12 +31,14 @@ class DefensaTesis extends Model
         'resultado',
         'estado',
         'observaciones',
+        'publicado',
     ];
 
     protected $casts = [
         'id_defensa' => 'integer',
         'id_edicion' => 'integer',
         'fecha_defensa' => 'date:Y-m-d',
+        'publicado' => 'boolean',
     ];
 
     protected $appends = [

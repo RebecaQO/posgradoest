@@ -5,6 +5,7 @@ export const defensaService = {
    * Obtiene la lista de defensas de grado y sustentación de tesis
    */
   getDefensasTesis: () => apiJson('/api/defensas-tesis'),
+  getDefensasPublicas: () => apiJson('/api/defensas-tesis/publicas'),
 
   save: (payload) => {
     if (payload.id) {

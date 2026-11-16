@@ -26,6 +26,18 @@ class Docente extends Model
         'nombre_doc',
         'apellido_doc',
         'foto',
+        'titulo_academico',
+        'descripcion_profesional',
+        'bibliografia_url',
+        'email',
+        'telefono',
+        'especialidad',
+        'categoria',
+        'scholar',
+        'researchgate',
+        'linkedin',
+        'orcid',
+        'activo',
     ];
 
     // Conversion de tipos
@@ -39,6 +51,7 @@ class Docente extends Model
         'nombre',
         'apellido',
         'nombre_completo',
+        'foto_url',
     ];
 
     public function getIdAttribute(): ?int
@@ -61,6 +74,19 @@ class Docente extends Model
         return trim("{$this->nombre_doc} {$this->apellido_doc}");
     }
 
+    public function getFotoUrlAttribute(): ?string
+    {
+        if (! $this->foto) {
+            return null;
+        }
+
+        if (preg_match('/^https?:\/\//i', $this->foto)) {
+            return $this->foto;
+        }
+
+        return url('/storage/'.ltrim($this->foto, '/'));
+    }
+
     // ========================================
     // RELACION CON EDICIONES
     // ========================================
@@ -74,6 +100,18 @@ class Docente extends Model
             'id_edicion',
             'id_doc',
             'id_edicion'
+        );
+    }
+
+    public function materias()
+    {
+        return $this->belongsToMany(
+            Materia::class,
+            'docente_materia',
+            'id_doc',
+            'id_mat',
+            'id_doc',
+            'id_mat'
         );
     }
 }

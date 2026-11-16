@@ -29,32 +29,31 @@ class ProgramaPostgradoController extends Controller
         $estados = self::ESTADOS_PUBLICOS;
 
         $programas = ProgramaPostgrado::query()
-            ->whereHas('ediciones', function ($consulta) use ($estados) {
-                $consulta->whereIn('estado', $estados);
-            })
+            ->where('activo', true)
             ->with([
                 'maestria',
                 'diplomado',
 
-                // Solo las ediciones visibles publicamente.
-                'ediciones' => function ($consulta) use ($estados) {
+                // Ediciones públicas u ordenadas
+                'ediciones' => function ($consulta) {
                     $consulta
-                        ->whereIn('estado', $estados)
                         ->with([
                             // Malla de la edicion.
                             'malla',
 
                             // Modulos y materias de maestria.
-                            'malla.modulos.materias.materia',
+                            'malla.modulos.materias.materia.docentes',
 
                             // Materias de diplomado.
-                            'malla.materiasDiplomado.materia',
+                            'malla.materiasDiplomado.materia.docentes',
 
                             // Docentes asignados a la edicion.
                             'docentes',
                         ])
                         ->orderBy('fecha_inicio', 'desc');
                 },
+                'mallas.modulos.materias.materia.docentes',
+                'mallas.materiasDiplomado.materia.docentes',
             ])
             ->orderBy('id_programa', 'asc')
             ->get();
@@ -90,15 +89,27 @@ class ProgramaPostgradoController extends Controller
     // OBTENER UN PROGRAMA
     // ========================================
 
-    public function obtenerPrograma(int $id)
+    public function obtenerPrograma($id)
     {
-        $programa = ProgramaPostgrado::with([
+        $query = ProgramaPostgrado::with([
             'maestria',
             'diplomado',
-            'mallas.modulos.materias.materia',
-            'mallas.materiasDiplomado.materia',
+            'mallas.modulos.materias.materia.docentes',
+            'mallas.materiasDiplomado.materia.docentes',
             'ediciones.docentes',
-        ])->find($id);
+            'ediciones.malla.modulos.materias.materia.docentes',
+            'ediciones.malla.materiasDiplomado.materia.docentes',
+        ]);
+
+        if (is_numeric($id)) {
+            $programa = $query->find((int) $id);
+        } else {
+            $slugClean = str_replace(['-', '_'], ' ', strtolower((string) $id));
+            $programa = $query->where(function ($q) use ($id, $slugClean) {
+                $q->whereRaw('LOWER(nombre_programa) LIKE ?', ["%{$slugClean}%"])
+                  ->orWhereRaw('LOWER(nombre_programa) LIKE ?', ["%{$id}%"]);
+            })->first();
+        }
 
         if (!$programa) {
             return response()->json([
@@ -174,6 +185,40 @@ class ProgramaPostgradoController extends Controller
             'success' => true,
             'message' => 'Programa reactivado correctamente.',
             'data' => $programa,
+        ], 200);
+    }
+
+    /** Selecciona el único programa que se mostrará en el primer banner público. */
+    public function promocionarPrograma(int $id)
+    {
+        $programa = ProgramaPostgrado::find($id);
+
+        if (! $programa) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Programa no encontrado',
+            ], 404);
+        }
+
+        if (! $programa->activo) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Solo se pueden promocionar programas activos',
+            ], 422);
+        }
+
+        DB::transaction(function () use ($programa): void {
+            ProgramaPostgrado::query()
+                ->where('promocionado', true)
+                ->update(['promocionado' => false]);
+
+            $programa->forceFill(['promocionado' => true])->save();
+        });
+
+        return response()->json([
+            'success' => true,
+            'message' => 'El programa se mostrará en el primer banner público',
+            'data' => $programa->fresh(['maestria', 'diplomado', 'ediciones']),
         ], 200);
     }
 

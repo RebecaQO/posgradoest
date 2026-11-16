@@ -1,17 +1,22 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-
+use App\Http\Controllers\Api\DefensaTesisController;
+use App\Http\Controllers\Api\InstitucionController;
+use App\Http\Controllers\Api\NoticiaController;
+use App\Http\Controllers\Api\UsuarioController;
+use App\Http\Controllers\ArchivoController;
 use App\Http\Controllers\AutenticacionController;
-use App\Http\Controllers\ProgramaPostgradoController;
-use App\Http\Controllers\MaestriaController;
 use App\Http\Controllers\DiplomadoController;
-use App\Http\Controllers\MallaCurricularController;
-use App\Http\Controllers\ModuloController;
-use App\Http\Controllers\MateriaController;
-use App\Http\Controllers\EdicionProgramaController;
 use App\Http\Controllers\DocenteController;
+use App\Http\Controllers\EdicionProgramaController;
+use App\Http\Controllers\MaestriaController;
+use App\Http\Controllers\MallaCurricularController;
+use App\Http\Controllers\MateriaController;
+use App\Http\Controllers\ModuloController;
+use App\Http\Controllers\ProgramaPostgradoController;
+use App\Http\Controllers\PersonalAdministrativoController;
 use App\Http\Controllers\RegistroAcademicoController;
+use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
@@ -48,14 +53,25 @@ Route::get(
     [EdicionProgramaController::class, 'listarConvocatoriasPasadas']
 );
 
+Route::get('/institucion', [InstitucionController::class, 'show']);
+Route::get('/institucion/info', [InstitucionController::class, 'show']);
+Route::get('/personal-administrativo', [PersonalAdministrativoController::class, 'publico']);
+Route::get('/noticias', [NoticiaController::class, 'index']);
+Route::get('/defensas-tesis/publicas', [DefensaTesisController::class, 'publicas']);
+
 Route::post(
     '/auth/login',
     [AutenticacionController::class, 'loginApi']
-)->middleware('throttle:5,1');
+)->middleware('throttle:login');
 
 Route::get(
     '/programas/activos',
     [ProgramaPostgradoController::class, 'listarProgramasActivos']
+);
+
+Route::get(
+    '/docentes/publicos',
+    [DocenteController::class, 'listarDocentesPublicos']
 );
 
 Route::get(
@@ -73,7 +89,6 @@ Route::get(
     [MallaCurricularController::class, 'listarMallasPorPrograma']
 );
 
-
 // ======================================================
 // 2. RUTAS AUTENTICADAS
 // ======================================================
@@ -85,12 +100,8 @@ Route::middleware('auth:sanctum')->group(function () {
     // ==============================================
 
     // SUBMODULO 4.2: DEFENSAS DE TESIS (CONSULTA)
-    Route::get('/defensas-tesis', [\App\Http\Controllers\Api\DefensaTesisController::class, 'index']);
-    Route::get('/defensas-tesis/{id}', [\App\Http\Controllers\Api\DefensaTesisController::class, 'show']);
-
-    // SUBMODULO 4.3: INFORMACION INSTITUCIONAL (CONSULTA)
-    Route::get('/institucion', [\App\Http\Controllers\Api\InstitucionController::class, 'show']);
-    Route::get('/institucion/info', [\App\Http\Controllers\Api\InstitucionController::class, 'show']);
+    Route::get('/defensas-tesis', [DefensaTesisController::class, 'index']);
+    Route::get('/defensas-tesis/{id}', [DefensaTesisController::class, 'show']);
 
     Route::get(
         '/auth/me',
@@ -230,6 +241,29 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::middleware('administrador')->group(function () {
 
+        Route::get('/admin/personal-administrativo', [PersonalAdministrativoController::class, 'administrar']);
+        Route::post('/personal-administrativo', [PersonalAdministrativoController::class, 'crear']);
+        Route::put('/personal-administrativo/{id}', [PersonalAdministrativoController::class, 'actualizar']);
+        Route::patch('/personal-administrativo/{id}/desactivar', [PersonalAdministrativoController::class, 'desactivar']);
+        Route::patch('/personal-administrativo/{id}/reactivar', [PersonalAdministrativoController::class, 'reactivar']);
+
+        Route::get('/admin/noticias', [NoticiaController::class, 'administrar']);
+        Route::post('/admin/noticias', [NoticiaController::class, 'store']);
+        Route::put('/admin/noticias/{id}', [NoticiaController::class, 'update']);
+        Route::delete('/admin/noticias/{id}', [NoticiaController::class, 'destroy']);
+
+        Route::post(
+            '/docentes/upload-foto',
+            [DocenteController::class, 'subirFoto']
+        );
+
+        Route::post(
+            '/ediciones/archivos/{tipo}',
+            [ArchivoController::class, 'subirArchivoEdicion']
+        )->whereIn('tipo', ['banner', 'folleto']);
+
+        Route::post('/defensas/upload-banner', [ArchivoController::class, 'subirBannerDefensa']);
+
         // ==========================================
         // PROGRAMAS
         // ==========================================
@@ -242,6 +276,11 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put(
             '/programas/{id}',
             [ProgramaPostgradoController::class, 'actualizarPrograma']
+        );
+
+        Route::patch(
+            '/programas/{id}/promocionar',
+            [ProgramaPostgradoController::class, 'promocionarPrograma']
         );
 
         Route::delete(
@@ -335,6 +374,11 @@ Route::middleware('auth:sanctum')->group(function () {
             [MateriaController::class, 'actualizarMateria']
         );
 
+        Route::put(
+            '/materias/{id}/docentes',
+            [MateriaController::class, 'actualizarDocentes']
+        );
+
         Route::post(
             '/modulos/{id}/materias',
             [MateriaController::class, 'asignarMateriaModulo']
@@ -426,24 +470,24 @@ Route::middleware('auth:sanctum')->group(function () {
         // SUBMODULO 4.1: GESTION DE USUARIOS
         // ==========================================
 
-        Route::apiResource('usuarios', \App\Http\Controllers\Api\UsuarioController::class);
-        Route::patch('usuarios/{usuario}/desactivar', [\App\Http\Controllers\Api\UsuarioController::class, 'desactivar']);
-        Route::patch('usuarios/{usuario}/reactivar', [\App\Http\Controllers\Api\UsuarioController::class, 'reactivar']);
+        Route::apiResource('usuarios', UsuarioController::class);
+        Route::patch('usuarios/{usuario}/desactivar', [UsuarioController::class, 'desactivar']);
+        Route::patch('usuarios/{usuario}/reactivar', [UsuarioController::class, 'reactivar']);
 
         // ==========================================
         // SUBMODULO 4.2: DEFENSAS DE TESIS (ADMIN)
         // ==========================================
 
-        Route::post('/defensas-tesis', [\App\Http\Controllers\Api\DefensaTesisController::class, 'store']);
-        Route::put('/defensas-tesis/{id}', [\App\Http\Controllers\Api\DefensaTesisController::class, 'update']);
-        Route::delete('/defensas-tesis/{id}', [\App\Http\Controllers\Api\DefensaTesisController::class, 'destroy']);
+        Route::post('/defensas-tesis', [DefensaTesisController::class, 'store']);
+        Route::put('/defensas-tesis/{id}', [DefensaTesisController::class, 'update']);
+        Route::delete('/defensas-tesis/{id}', [DefensaTesisController::class, 'destroy']);
 
         // ==========================================
         // SUBMODULO 4.3: INFORMACION INSTITUCIONAL (ADMIN)
         // ==========================================
 
-        Route::put('/institucion', [\App\Http\Controllers\Api\InstitucionController::class, 'update']);
-        Route::put('/institucion/info', [\App\Http\Controllers\Api\InstitucionController::class, 'update']);
-        Route::put('/admin/institucion/info', [\App\Http\Controllers\Api\InstitucionController::class, 'update']);
+        Route::put('/institucion', [InstitucionController::class, 'update']);
+        Route::put('/institucion/info', [InstitucionController::class, 'update']);
+        Route::put('/admin/institucion/info', [InstitucionController::class, 'update']);
     });
 });

@@ -62,6 +62,8 @@ export const AuthProvider = ({ children }) => {
       return false;
     }
 
+    setAuthError('');
+
     try {
       const data = await authService.login(email, password);
       if (!data?.token) {

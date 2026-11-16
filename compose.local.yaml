@@ -1,0 +1,13 @@
+services:
+  app:
+    ports:
+      - "8080:8080"
+
+  frontend:
+    ports:
+      - "3000:80"
+
+networks:
+  dokploy-network:
+    external: false
+    name: dokploy-network

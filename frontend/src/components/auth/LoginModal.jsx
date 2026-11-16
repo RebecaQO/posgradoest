@@ -13,8 +13,8 @@ import {
 export const LoginModal = ({ onLoginSuccess }) => {
   const { loginModalOpen, setLoginModalOpen, loginAs, authError } = useAuth();
 
-  const [emailInput, setEmailInput] = useState('admin');
-  const [passwordInput, setPasswordInput] = useState('Admin1234!');
+  const [emailInput, setEmailInput] = useState('');
+  const [passwordInput, setPasswordInput] = useState('');
   const [loading, setLoading] = useState(false);
 
   if (!loginModalOpen) return null;
@@ -25,15 +25,21 @@ export const LoginModal = ({ onLoginSuccess }) => {
     try {
       const user = await loginAs({ email: emailInput, password: passwordInput });
       if (user && onLoginSuccess) {
-        onLoginSuccess('admin');
+        onLoginSuccess(user.role);
       }
     } finally {
+      setPasswordInput('');
       setLoading(false);
     }
   };
 
+  const closeLogin = () => {
+    setLoginModalOpen(false);
+    setPasswordInput('');
+  };
+
   return (
-    <div className="modal-overlay" onClick={() => setLoginModalOpen(false)}>
+    <div className="modal-overlay" onClick={closeLogin}>
       <div 
         className="modal-content"
         onClick={(e) => e.stopPropagation()}
@@ -85,7 +91,7 @@ export const LoginModal = ({ onLoginSuccess }) => {
 
           <button 
             className="modal-close-btn"
-            onClick={() => setLoginModalOpen(false)}
+            onClick={closeLogin}
             style={{ color: '#ffffff', background: 'rgba(255,255,255,0.15)', borderRadius: '50%', border: 'none', padding: '0.4rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
           >
             <X size={18} />
@@ -114,17 +120,18 @@ export const LoginModal = ({ onLoginSuccess }) => {
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
             <div className="form-group" style={{ margin: 0 }}>
               <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', fontWeight: 700, marginBottom: '0.4rem' }}>
-                <span>Usuario o Correo Institucional</span>
-                <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', fontWeight: 400 }}>admin o admin@posgrado.umsa.bo</span>
+                <span>Usuario o correo institucional</span>
               </label>
               <div style={{ position: 'relative' }}>
                 <Mail size={17} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-subtle)' }} />
                 <input
                   type="text"
                   required
+                  autoComplete="username"
+                  maxLength={255}
                   value={emailInput}
                   onChange={(e) => setEmailInput(e.target.value)}
-                  placeholder="admin o admin@posgrado.umsa.bo"
+                  placeholder="Ingresa tu usuario o correo"
                   className="form-control"
                   style={{ paddingLeft: '2.6rem', height: '48px', fontSize: '0.95rem' }}
                 />
@@ -134,13 +141,14 @@ export const LoginModal = ({ onLoginSuccess }) => {
             <div className="form-group" style={{ margin: 0 }}>
               <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', fontWeight: 700, marginBottom: '0.4rem' }}>
                 <span>Contraseña</span>
-                <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', fontWeight: 400 }}>Admin1234!</span>
               </label>
               <div style={{ position: 'relative' }}>
                 <Lock size={17} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-subtle)' }} />
                 <input
                   type="password"
                   required
+                  autoComplete="current-password"
+                  maxLength={255}
                   value={passwordInput}
                   onChange={(e) => setPasswordInput(e.target.value)}
                   placeholder="••••••••••••"

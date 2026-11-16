@@ -1,84 +1,38 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   ArrowLeft,
   ChevronDown,
   BookOpen,
   GraduationCap,
   Award,
-  CheckCircle2,
   Clock,
   FileText,
   Calendar,
   Download,
-  Share2,
   MessageCircle,
   Users,
   Compass,
-  Laptop,
-  Check,
   ExternalLink,
-  ChevronRight,
-  ShieldCheck,
   CalendarDays,
-  Sparkles,
-  BarChart3,
-  Brain,
-  Database,
-  Code2,
-  Lightbulb,
   FileCheck2,
-  CheckSquare,
-  Square
+  Info,
+  AlertCircle,
+  Layers,
 } from 'lucide-react';
 import { programaService } from '../../services/programaService';
-import { facultyData } from '../../data/facultyData';
-import { programsData } from '../../data/programsData';
+import './ProgramFaculty.css';
 
-// Banners oficiales para cada maestría y diplomado
-import cardCienciaDatos from '../../assets/images/banner/card_maestria_ciencia_datos.png';
-import cardTerminalEstadistica from '../../assets/images/banner/card_maestria_terminal_estadistica.png';
-import cardDataMining from '../../assets/images/banner/card_diplomado_data_mining.png';
+const programFacultyPalettes = [
+  { accent: '#16764b', soft: '#e4f4e9' },
+  { accent: '#2f68b2', soft: '#e7effb' },
+  { accent: '#7652a6', soft: '#f0eafb' },
+  { accent: '#b56a19', soft: '#fbf0df' },
+  { accent: '#16828a', soft: '#e1f3f2' },
+];
 
-// Posts y Afiches oficiales individuales para cada programa
-import postCienciaDatos from '../../assets/images/banner/post_maestria_ciencia_datos.png';
-import postTerminalEstadistica from '../../assets/images/banner/post_maestria_terminal_estadistica.png';
-import postDataMining from '../../assets/images/banner/post_diplomado_data_mining.jpg';
+const initialsFromName = (name = '') => name.trim().split(/\s+/).slice(0, 2).map((part) => part[0] || '').join('').toUpperCase();
 
-const getProgramBannerUrl = (prog) => {
-  const id = String(prog?.id ?? '').toLowerCase();
-  const code = String(prog?.code ?? '').toLowerCase();
-  const title = String(prog?.title ?? '').toLowerCase();
-
-  if (id === 'pg-est-002' || id === 'msc-ciencia-datos' || code.includes('m01') || title.includes('ciencia') || title.includes('datos')) {
-    return cardCienciaDatos;
-  }
-  if (id === 'pg-est-001' || id === 'msc-terminal-estadistica' || title.includes('terminal') || title.includes('estadística') || title.includes('estadistica') || title.includes('bioestadística') || title.includes('bioestadistica')) {
-    return cardTerminalEstadistica;
-  }
-  if (id === 'pg-est-003' || id.includes('dip') || title.includes('mining') || title.includes('diplomado') || title.includes('métodos') || title.includes('metodos') || title.includes('machine learning') || title.includes('actuarial')) {
-    return cardDataMining;
-  }
-  return cardCienciaDatos;
-};
-
-const getProgramPostUrl = (prog) => {
-  const id = String(prog?.id ?? '').toLowerCase();
-  const code = String(prog?.code ?? '').toLowerCase();
-  const title = String(prog?.title ?? '').toLowerCase();
-
-  if (id === 'pg-est-002' || id === 'msc-ciencia-datos' || code.includes('m01') || title.includes('ciencia') || title.includes('datos')) {
-    return postCienciaDatos;
-  }
-  if (id === 'pg-est-001' || id === 'msc-terminal-estadistica' || title.includes('terminal') || title.includes('estadística') || title.includes('estadistica') || title.includes('bioestadística') || title.includes('bioestadistica')) {
-    return postTerminalEstadistica;
-  }
-  if (id === 'pg-est-003' || id.includes('dip') || title.includes('mining') || title.includes('diplomado') || title.includes('métodos') || title.includes('metodos') || title.includes('machine learning') || title.includes('actuarial')) {
-    return postDataMining;
-  }
-  return postCienciaDatos;
-};
-
-// Helper to produce a direct download URL (handles Google Drive links directly)
+// Helper para enlaces de Google Drive o descargas directas
 const getDirectDownloadLink = (url) => {
   if (!url) return null;
   const driveMatch = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
@@ -88,206 +42,264 @@ const getDirectDownloadLink = (url) => {
   return url;
 };
 
-// ── Shared UI Styles con la Paleta Corporativa UMSA ──
-const cleanPanelStyle = {
-  background: '#FFFFFF',
-  borderRadius: '10px',
-  border: '1px solid #DCE1E6',
-  padding: '1.75rem 2rem',
-  boxShadow: '0 2px 10px rgba(55, 58, 64, 0.03)'
-};
-
-const sectionHeaderStyle = (bg, color) => ({
-  display: 'flex',
-  alignItems: 'center',
-  gap: '0.85rem',
-  marginBottom: '1.5rem',
-  paddingBottom: '1rem',
-  borderBottom: '1px solid #DCE1E6'
-});
-
-const iconBadgeStyle = (bg, color) => ({
-  width: '42px',
-  height: '42px',
-  borderRadius: '8px',
-  background: bg,
-  color: color,
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  flexShrink: 0
-});
-
-const sectionTitleStyle = {
-  fontSize: '1.25rem',
-  fontWeight: 800,
-  color: '#373A40',
-  margin: '0 0 0.2rem 0',
-  letterSpacing: '-0.01em'
-};
-
-const sectionSubtitleStyle = {
-  fontSize: '0.825rem',
-  color: '#646973',
-  margin: 0
-};
-
-const dateCardStyle = {
-  background: '#FFFFFF',
-  border: '1.5px solid #DCE1E6',
-  borderRadius: '8px',
-  padding: '1.15rem'
-};
-
-const dateBadgeStyle = (bg, color) => ({
-  display: 'inline-block',
-  background: bg,
-  color: color,
-  fontSize: '0.72rem',
-  fontWeight: 800,
-  padding: '0.2rem 0.55rem',
-  borderRadius: '4px',
-  marginBottom: '0.4rem',
-  border: `1px solid ${color}40`
-});
-
-const dateTitleStyle = {
-  fontSize: '0.92rem',
-  fontWeight: 800,
-  color: '#373A40',
-  marginBottom: '0.2rem'
-};
-
-const dateValueStyle = {
-  fontSize: '0.825rem',
-  fontWeight: 700,
-  color: '#006400',
-  marginBottom: '0.35rem'
-};
-
-const dateDescStyle = {
-  fontSize: '0.78rem',
-  color: '#646973',
-  lineHeight: 1.45
+// Formateador de fecha legible
+const formatDate = (dateStr) => {
+  if (!dateStr) return null;
+  try {
+    const parts = dateStr.split('-');
+    if (parts.length === 3) {
+      const year = parts[0];
+      const monthIndex = parseInt(parts[1], 10) - 1;
+      const day = parseInt(parts[2], 10);
+      const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+      return `${day} ${months[monthIndex]} ${year}`;
+    }
+    const d = new Date(dateStr);
+    if (!isNaN(d.getTime())) {
+      return d.toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' });
+    }
+  } catch (e) {
+    return dateStr;
+  }
+  return dateStr;
 };
 
 export const ProgramDetailView = ({ programId, program: initialProgram, onBack, onNavigateToAdmission }) => {
-  const [programData, setProgramData] = useState(initialProgram || null);
+  const [rawProgram, setRawProgram] = useState(initialProgram || null);
   const [loading, setLoading] = useState(true);
+  const [errorMsg, setErrorMsg] = useState(null);
   const [activeTab, setActiveTab] = useState('perfil');
   const [activeSemesterTab, setActiveSemesterTab] = useState(0);
+  const [selectedMallaId, setSelectedMallaId] = useState(null);
 
-  // Interactive Document Checklist State for "Requisitos"
-  const [checkedDocs, setCheckedDocs] = useState({
-    doc1: false,
-    doc2: false,
-    doc3: false,
-    doc4: false,
-    doc5: false,
-    doc6: false
-  });
-
-  const toggleCheckDoc = (key) => {
-    setCheckedDocs((prev) => ({ ...prev, [key]: !prev[key] }));
-  };
-
-  const totalChecked = Object.values(checkedDocs).filter(Boolean).length;
-  const totalDocs = Object.keys(checkedDocs).length;
-  const progressPercent = Math.round((totalChecked / totalDocs) * 100);
-
-  // Load program by ID or initialProgram
+  // Cargar datos en vivo exclusivamente desde la base de datos (REST API Laravel)
   useEffect(() => {
-    const targetId = programId || initialProgram?.id || initialProgram?.code;
+    const targetId = programId || initialProgram?.id_programa || initialProgram?.id || initialProgram?.code;
     if (!targetId) {
       setLoading(false);
       return;
     }
 
     let isMounted = true;
-    const fetchFullData = async () => {
+    const fetchProgram = async () => {
       try {
         setLoading(true);
+        setErrorMsg(null);
         const resp = await programaService.getById(targetId);
-        // La API devuelve { success, data: { ... } } o el objeto directo
         const raw = resp?.data ?? resp;
-        if (isMounted && raw) {
-          // Normalizar la respuesta de la API al formato que espera el componente
-          const edicion = raw.ediciones?.[0] ?? {};
-          const mallaActiva = raw.mallas?.find(m => m.activo) ?? raw.mallas?.[0] ?? {};
-          const esMaestria = (raw.tipo_programa || '').toLowerCase().includes('maestr');
 
-          // Construir curriculum desde malla
-          let curriculum = [];
-          if (esMaestria && Array.isArray(mallaActiva.modulos)) {
-            curriculum = mallaActiva.modulos.map((mod) => ({
-              semester: mod.nombre_mod,
-              modules: (mod.materias || []).map((m) => ({
-                name: m.materia?.nombre_mat ?? `Materia ${m.id_mat}`,
-                credits: m.pivot?.creditos ?? 0,
-                hours: m.pivot?.carga_horaria ?? 0,
-                desc: m.materia?.descripcion ?? '',
-              })),
-            }));
-          } else if (!esMaestria && Array.isArray(mallaActiva.materias_diplomado)) {
-            curriculum = [{
-              semester: mallaActiva.nombre_malla || 'Plan de Estudios',
-              modules: (mallaActiva.materias_diplomado || []).map((m) => ({
-                name: m.materia?.nombre_mat ?? `Materia ${m.id_mat}`,
-                credits: m.pivot?.creditos ?? 0,
-                hours: m.pivot?.carga_horaria ?? 0,
-                desc: m.materia?.descripcion ?? '',
-              })),
-            }];
-          }
-
-          const normalized = {
-            // Campos de identidad
-            id: raw.id_programa ?? raw.id,
-            id_programa: raw.id_programa ?? raw.id,
-            title: raw.nombre_programa,
-            type: raw.tipo_programa,
-            area: raw.area_conocimiento,
-            description: raw.descripcion,
-            // Perfil académico
-            perfil_aspirante: raw.perfil_aspirante,
-            perfil_egreso: raw.perfil_egreso,
-            // Desde edición activa
-            duration: edicion.duracion,
-            modality: edicion.modalidad_titulacion,
-            credits: edicion.creditos,
-            modalidad_titulacion: edicion.modalidad_titulacion,
-            requisitos_admision: edicion.requisitos,
-            enlace_convocatoria_drive: edicion.convocatoria,
-            enlace_pdf_programa: raw.enlace_pdf_programa,
-            // Malla curricular normalizada
-            curriculum,
-            // Raw para acceso directo
-            mallas: raw.mallas,
-            ediciones: raw.ediciones,
-            activo: raw.activo,
-          };
-          setProgramData(normalized);
+        if (isMounted && raw && (raw.id_programa || raw.id)) {
+          setRawProgram(raw);
         }
       } catch (err) {
-        console.warn('Error cargando datos del programa:', err);
-        const fallback = programsData.find(
-          (p) => p.id === targetId || p.code === targetId || p.title === targetId
-        );
-        if (isMounted && fallback) {
-          setProgramData((prev) => prev || fallback);
-        }
+        console.warn('Error cargando programa desde BD:', err);
+        setErrorMsg('No se pudo conectar con la base de datos para cargar este programa.');
       } finally {
         if (isMounted) setLoading(false);
       }
     };
 
-    fetchFullData();
+    fetchProgram();
+
     return () => {
       isMounted = false;
     };
-  }, [programId, initialProgram?.id]);
+  }, [programId, initialProgram?.id, initialProgram?.id_programa]);
 
-  const prog = programData || initialProgram;
+  // Ediciones registradas en la base de datos
+  const ediciones = useMemo(() => (Array.isArray(rawProgram?.ediciones) ? rawProgram.ediciones : []), [rawProgram]);
+  const edicionActiva = useMemo(() => {
+    return ediciones.find((e) => ['Abierta', 'En Curso', 'En Proceso'].includes(e.estado))
+      ?? ediciones[0]
+      ?? null;
+  }, [ediciones]);
+
+  // Mallas curriculares registradas en la base de datos
+  const mallas = useMemo(() => (Array.isArray(rawProgram?.mallas) ? rawProgram.mallas : []), [rawProgram]);
+
+  // Resolución reactiva de la malla activa
+  const mallaActiva = useMemo(() => {
+    if (selectedMallaId) {
+      const found = mallas.find((m) => m.id_malla === selectedMallaId);
+      if (found) return found;
+    }
+    const targetMallaId = edicionActiva?.id_malla || edicionActiva?.malla?.id_malla;
+    if (targetMallaId) {
+      const found = mallas.find((m) => m.id_malla === targetMallaId);
+      if (found) return found;
+    }
+    const activa = mallas.find((m) => m.activo);
+    if (activa) return activa;
+    return edicionActiva?.malla ?? mallas[0] ?? null;
+  }, [selectedMallaId, edicionActiva, mallas]);
+
+  const esMaestria = useMemo(() => {
+    return String(rawProgram?.tipo_programa || rawProgram?.type || '').toLowerCase().includes('maestr');
+  }, [rawProgram]);
+
+  // Currículum modular estructurado directamente desde la base de datos
+  const curriculum = useMemo(() => {
+    if (!mallaActiva) return [];
+    const modulos = Array.isArray(mallaActiva.modulos) ? mallaActiva.modulos : [];
+    const materiasDiplomado = Array.isArray(mallaActiva.materias_diplomado)
+      ? mallaActiva.materias_diplomado
+      : Array.isArray(mallaActiva.materiasDiplomado)
+        ? mallaActiva.materiasDiplomado
+        : [];
+
+    if (modulos.length > 0) {
+      return modulos.map((mod, idx) => ({
+        id: mod.id_mod || idx,
+        semester: mod.nombre_mod || `Módulo ${idx + 1}`,
+        modules: (mod.materias || []).map((m, mIdx) => {
+          const matObj = m.materia || m;
+          const pivot = m.pivot || {};
+          const creditos = pivot.creditos ?? m.creditos ?? matObj.creditos ?? null;
+          const horas = pivot.carga_horaria ?? m.carga_horaria ?? matObj.carga_horaria ?? null;
+          const docentesMat = (matObj.docentes || []).map(d =>
+            d.nombre_completo || [d.titulo_academico, d.nombre_doc, d.apellido_doc].filter(Boolean).join(' ') || `${d.nombre || ''} ${d.apellido || ''}`.trim()
+          ).filter(Boolean);
+          return {
+            id: matObj.id_mat || m.id_mat || mIdx,
+            code: `MAT-${matObj.id_mat || (idx + 1) * 10 + mIdx}`,
+            name: matObj.nombre_mat || matObj.nombre || `Materia #${matObj.id_mat || mIdx + 1}`,
+            credits: creditos,
+            hours: horas,
+            desc: matObj.descripcion || null,
+            docentes: docentesMat.length > 0 ? docentesMat.join(', ') : null,
+          };
+        }),
+      }));
+    }
+
+    if (materiasDiplomado.length > 0) {
+      return [{
+        id: mallaActiva.id_malla || 1,
+        semester: mallaActiva.nombre_malla || 'Módulos del Diplomado',
+        modules: materiasDiplomado.map((m, mIdx) => {
+          const matObj = m.materia || m;
+          const pivot = m.pivot || {};
+          const creditos = pivot.creditos ?? m.creditos ?? matObj.creditos ?? null;
+          const horas = pivot.carga_horaria ?? m.carga_horaria ?? matObj.carga_horaria ?? null;
+          const docentesMat = (matObj.docentes || []).map(d =>
+            d.nombre_completo || [d.titulo_academico, d.nombre_doc, d.apellido_doc].filter(Boolean).join(' ') || `${d.nombre || ''} ${d.apellido || ''}`.trim()
+          ).filter(Boolean);
+          return {
+            id: matObj.id_mat || m.id_mat || mIdx,
+            code: `DIP-${matObj.id_mat || mIdx + 1}`,
+            name: matObj.nombre_mat || matObj.nombre || `Módulo #${matObj.id_mat || mIdx + 1}`,
+            credits: creditos,
+            hours: horas,
+            desc: matObj.descripcion || null,
+            docentes: docentesMat.length > 0 ? docentesMat.join(', ') : null,
+          };
+        }),
+      }];
+    }
+
+    return [];
+  }, [mallaActiva]);
+
+  // Planta docente exclusivamente de la base de datos
+  const docentes = useMemo(() => {
+    const docentesMap = new Map();
+    // 1. Docentes asignados a la edición activa
+    if (edicionActiva && Array.isArray(edicionActiva.docentes)) {
+      edicionActiva.docentes.forEach((doc) => {
+        const idDoc = doc.id_doc ?? doc.id;
+        if (idDoc) {
+          const nombreCompleto = doc.nombre_completo || `${doc.nombre_doc || ''} ${doc.apellido_doc || ''}`.trim();
+          docentesMap.set(idDoc, {
+            id: idDoc,
+            name: nombreCompleto,
+            degree: doc.titulo_academico || null,
+            bio: doc.descripcion_profesional || null,
+            avatar: doc.foto_url || doc.foto || null,
+            bibliographyUrl: doc.bibliografia_url || null,
+          });
+        }
+      });
+    }
+
+    // 2. Docentes de todas las ediciones del programa
+    ediciones.forEach((ed) => {
+      if (Array.isArray(ed.docentes)) {
+        ed.docentes.forEach((doc) => {
+          const idDoc = doc.id_doc ?? doc.id;
+          if (idDoc && !docentesMap.has(idDoc)) {
+            const nombreCompleto = doc.nombre_completo || `${doc.nombre_doc || ''} ${doc.apellido_doc || ''}`.trim();
+            docentesMap.set(idDoc, {
+              id: idDoc,
+              name: nombreCompleto,
+              degree: doc.titulo_academico || null,
+              bio: doc.descripcion_profesional || null,
+              avatar: doc.foto_url || doc.foto || null,
+              bibliographyUrl: doc.bibliografia_url || null,
+            });
+          }
+        });
+      }
+    });
+
+    // 3. Docentes vinculados a materias de la malla activa
+    if (Array.isArray(mallaActiva?.modulos)) {
+      mallaActiva.modulos.forEach((mod) => {
+        (mod.materias || []).forEach((m) => {
+          const matObj = m.materia || m;
+          (matObj.docentes || []).forEach((doc) => {
+            const idDoc = doc.id_doc ?? doc.id;
+            if (idDoc && !docentesMap.has(idDoc)) {
+              const nombreCompleto = doc.nombre_completo || `${doc.nombre_doc || ''} ${doc.apellido_doc || ''}`.trim();
+              docentesMap.set(idDoc, {
+                id: idDoc,
+                name: nombreCompleto,
+                degree: doc.titulo_academico || null,
+                bio: doc.descripcion_profesional || null,
+                avatar: doc.foto_url || doc.foto || null,
+                bibliographyUrl: doc.bibliografia_url || null,
+              });
+            }
+          });
+        });
+      });
+    }
+
+    return Array.from(docentesMap.values());
+  }, [edicionActiva, ediciones, mallaActiva]);
+
+  // Objeto normalizado del programa
+  const prog = useMemo(() => {
+    if (!rawProgram) return null;
+    return {
+      id: rawProgram.id_programa ?? rawProgram.id,
+      id_programa: rawProgram.id_programa ?? rawProgram.id,
+      title: rawProgram.nombre_programa || rawProgram.title,
+      type: rawProgram.tipo_programa || rawProgram.type || (esMaestria ? 'Maestría' : 'Diplomado'),
+      area: rawProgram.area_conocimiento || rawProgram.area || null,
+      mencion: rawProgram.mencion || null,
+      description: rawProgram.descripcion || rawProgram.description || null,
+      perfil_aspirante: rawProgram.perfil_aspirante || null,
+      perfil_egreso: rawProgram.perfil_egreso || null,
+      enlace_pdf_programa: rawProgram.enlace_pdf_programa || null,
+      activo: rawProgram.activo ?? true,
+      ediciones,
+      edicionActiva,
+      mallas,
+      mallaActiva,
+      curriculum,
+      docentes,
+      duration: edicionActiva?.duracion || null,
+      horario: edicionActiva?.horario || null,
+      modality: edicionActiva?.modalidad_titulacion || null,
+      credits: edicionActiva?.creditos || null,
+      modalidad_titulacion: edicionActiva?.modalidad_titulacion || null,
+      requisitos_admision: edicionActiva?.requisitos || null,
+      convocatoria: edicionActiva?.convocatoria || rawProgram.enlace_pdf_programa || null,
+      formulario: edicionActiva?.formulario || null,
+      banner: edicionActiva?.banner || rawProgram.banner || null,
+      folleto: edicionActiva?.folleto || rawProgram.folleto || null,
+    };
+  }, [rawProgram, esMaestria, ediciones, edicionActiva, mallas, mallaActiva, curriculum, docentes]);
 
   const handleBackNavigation = () => {
     if (onBack) {
@@ -299,11 +311,15 @@ export const ProgramDetailView = ({ programId, program: initialProgram, onBack, 
 
   if (loading && !prog) {
     return (
-      <div style={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#F5F5F5' }}>
-        <div style={{ textAlign: 'center', padding: '3rem' }}>
-          <div className="spinner" style={{ margin: '0 auto 1.25rem' }} />
-          <h3 style={{ color: '#373A40', fontWeight: 800, margin: '0 0 0.5rem 0' }}>Cargando programa académico...</h3>
-          <p style={{ color: '#646973', fontSize: '0.9rem' }}>Consultando base de datos oficial de posgrado UMSA</p>
+      <div style={{ minHeight: '75vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#F8FAFC' }}>
+        <div style={{ textAlign: 'center', padding: '3rem', maxWidth: '420px' }}>
+          <div className="spinner" style={{ margin: '0 auto 1.5rem', width: '42px', height: '42px', border: '3px solid #E2E8F0', borderTopColor: '#059669', borderRadius: '50%' }} />
+          <h3 style={{ color: '#0F172A', fontWeight: 800, margin: '0 0 0.5rem 0', fontSize: '1.25rem' }}>
+            Consultando Base de Datos...
+          </h3>
+          <p style={{ color: '#64748B', fontSize: '0.9rem', margin: 0 }}>
+            Obteniendo la información real administrada para este programa académico.
+          </p>
         </div>
       </div>
     );
@@ -311,12 +327,17 @@ export const ProgramDetailView = ({ programId, program: initialProgram, onBack, 
 
   if (!prog) {
     return (
-      <div className="container" style={{ textAlign: 'center', padding: '6rem 1rem', minHeight: '60vh' }}>
-        <h2 style={{ color: '#373A40', marginBottom: '1rem', fontWeight: 800 }}>Programa no encontrado</h2>
-        <p style={{ color: '#646973', marginBottom: '2rem' }}>
-          El programa solicitado no existe o no se encuentra activo actualmente.
+      <div className="container" style={{ textAlign: 'center', padding: '6rem 1rem', minHeight: '65vh' }}>
+        <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: '#FEF2F2', color: '#DC2626', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.25rem' }}>
+          <AlertCircle size={32} />
+        </div>
+        <h2 style={{ color: '#0F172A', marginBottom: '0.75rem', fontWeight: 800, fontSize: '1.65rem' }}>
+          Programa no encontrado
+        </h2>
+        <p style={{ color: '#64748B', marginBottom: '2rem', maxWidth: '480px', margin: '0 auto 2rem' }}>
+          El programa académico solicitado no existe o no tiene registros activos en la base de datos de administración.
         </p>
-        <button onClick={handleBackNavigation} className="btn btn-secondary">
+        <button onClick={handleBackNavigation} className="btn btn-secondary" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
           <ArrowLeft size={16} />
           <span>Volver al Catálogo de Programas</span>
         </button>
@@ -324,1541 +345,1386 @@ export const ProgramDetailView = ({ programId, program: initialProgram, onBack, 
     );
   }
 
-  const isMaster = String(prog.type || '').toLowerCase().includes('maestr') ||
-    prog.typeFilter === 'maestria' ||
-    prog.typeFilter === 'terminal' ||
-    prog.typeFilter === 'autofinanciada' ||
-    String(prog.title || '').toLowerCase().includes('maestr');
+  const isMaster = String(prog.type || prog.tipo_programa || '').toLowerCase().includes('maestr');
+  const progCurriculum = prog.curriculum || [];
+  const docentesList = prog.docentes || [];
 
-  const curriculum = prog.curriculum || [];
-  const targetAudienceText = prog.perfil_aspirante || prog.targetAudience || 
-    'Profesionales con grado de Licenciatura en Estadística, Informática, Sistemas, Matemáticas, Economía, Ingeniería y carreras afines interesadas en la modelación cuantitativa, analítica avanzada y computación científica.';
+  const heroBannerUrl = prog.banner || prog.edicionActiva?.banner || null;
+  const programPostUrl = prog.folleto || prog.edicionActiva?.folleto || null;
 
-  const graduateProfileText = prog.perfil_egreso || prog.graduateProfile || 
-    'El egresado poseerá sólidas competencias teóricas y metodológicas aplicadas para formular modelos estocásticos, procesar grandes volúmenes de datos, liderar equipos analíticos y formular soluciones innovadoras en organizaciones públicas, privadas o centros de investigación.';
+  const rawConvocatoriaUrl = prog.convocatoria || prog.edicionActiva?.convocatoria || prog.enlace_pdf_programa || null;
+  const directDownloadConvocatoria = getDirectDownloadLink(rawConvocatoriaUrl);
 
-  const titulationText = prog.modalidad_titulacion || 
-    (prog.titulationOptions && prog.titulationOptions.map(t => `${t.name}: ${t.desc}`).join('\n\n')) ||
-    '1. Tesis de Grado de Maestría con sustentación pública ante tribunal evaluador.\n2. Publicación de artículo científico indexado (Scopus / SciELO / Web of Science).\n3. Trabajo Dirigido de Posgrado con impacto institucional medible.';
-
-  // Links directos de descarga
-  const rawConvocatoriaUrl = prog.enlace_convocatoria_drive || prog.enlace_pdf_programa || 'https://drive.google.com/file/d/1FIBzOG85Nbnv3e-qpM-oTp6ovy1WEqo7/view?usp=drive_link';
-  const directDownloadConvocatoria = getDirectDownloadLink(rawConvocatoriaUrl) || rawConvocatoriaUrl;
-
-  const rawMallaUrl = prog.enlace_pdf_programa || prog.enlace_convocatoria_drive || 'https://drive.google.com/file/d/1FIBzOG85Nbnv3e-qpM-oTp6ovy1WEqo7/view?usp=drive_link';
-  const directDownloadMalla = getDirectDownloadLink(rawMallaUrl) || rawMallaUrl;
+  const directInscripcionUrl = prog.formulario || prog.edicionActiva?.formulario || null;
+  const directDownloadGuia = getDirectDownloadLink(prog.enlace_pdf_programa);
 
   const whatsappMessage = encodeURIComponent(
-    `Hola, solicito información y orientación sobre el programa: ${prog.title} (Código: ${prog.code || prog.id || ''})`
+    `Hola, solicito información sobre el programa: ${prog.title || prog.nombre_programa} (ID: ${prog.id || ''}) - Unidad de Posgrado Carrera de Estadística UMSA.`
   );
 
+  const totalMateriasCount = progCurriculum.reduce((acc, sem) => acc + (sem.modules?.length || 0), 0);
+  const totalEdicionesCount = prog.ediciones?.length || 0;
+
+  // 5 Pestañas conectadas con los módulos de administración
   const tabConfigs = [
     {
       id: 'perfil',
       label: 'Perfil Académico',
       icon: Compass,
       color: '#2563EB',
-      gradient: 'linear-gradient(135deg, #1D4ED8 0%, #3B82F6 100%)',
-      subtleBg: '#EFF6FF',
-      borderColor: '#BFDBFE',
-      textColor: '#1D4ED8'
+      gradient: 'linear-gradient(135deg, #1E40AF 0%, #3B82F6 100%)',
+      lightBg: '#EFF6FF',
     },
     {
       id: 'materias',
       label: 'Materias y Malla',
       icon: BookOpen,
       color: '#059669',
-      gradient: 'linear-gradient(135deg, #047857 0%, #10B981 100%)',
-      subtleBg: '#ECFDF5',
-      borderColor: '#A7F3D0',
-      textColor: '#047857'
+      gradient: 'linear-gradient(135deg, #065F46 0%, #10B981 100%)',
+      lightBg: '#ECFDF5',
+      tag: totalMateriasCount > 0 ? `${totalMateriasCount} materias` : null,
     },
     {
       id: 'docentes',
-      label: 'Docentes',
+      label: 'Planta Docente',
       icon: Users,
       color: '#7C3AED',
-      gradient: 'linear-gradient(135deg, #6D28D9 0%, #8B5CF6 100%)',
-      subtleBg: '#F5F3FF',
-      borderColor: '#DDD6FE',
-      textColor: '#6D28D9'
+      gradient: 'linear-gradient(135deg, #5B21B6 0%, #8B5CF6 100%)',
+      lightBg: '#F5F3FF',
+      tag: docentesList.length > 0 ? `${docentesList.length} docentes` : null,
     },
     {
       id: 'requisitos',
-      label: 'Requisitos',
+      label: 'Requisitos & Admisión',
       icon: FileText,
       color: '#D97706',
-      gradient: 'linear-gradient(135deg, #B45309 0%, #F59E0B 100%)',
-      subtleBg: '#FFFBEB',
-      borderColor: '#FDE68A',
-      textColor: '#B45309'
+      gradient: 'linear-gradient(135deg, #92400E 0%, #F59E0B 100%)',
+      lightBg: '#FFFBEB',
     },
     {
       id: 'fechas',
       label: 'Fechas y Horarios',
       icon: CalendarDays,
       color: '#DC2626',
-      gradient: 'linear-gradient(135deg, #B91C1C 0%, #EF4444 100%)',
-      subtleBg: '#FEF2F2',
-      borderColor: '#FECACA',
-      textColor: '#B91C1C'
-    }
+      gradient: 'linear-gradient(135deg, #991B1B 0%, #EF4444 100%)',
+      lightBg: '#FEF2F2',
+      tag: totalEdicionesCount > 0 ? `${totalEdicionesCount} ${totalEdicionesCount === 1 ? 'edición' : 'ediciones'}` : null,
+    },
   ];
 
-  const heroBannerUrl = getProgramBannerUrl(prog);
-  const programPostUrl = getProgramPostUrl(prog);
-
   return (
-    <div className="program-detail-root animate-fade-in" style={{ backgroundColor: '#F0F2F5', minHeight: '100vh', color: '#373A40', paddingBottom: '5rem' }}>
+    <div className="program-detail-root animate-fade-in" style={{ backgroundColor: '#F8FAFC', minHeight: '100vh', color: '#1E293B', paddingBottom: '4rem' }}>
       
-      {/* ── 1. Top Bar Navigation ── */}
+      {/* ── 1. Top Navigation Bar ── */}
       <nav style={{
-        background: 'rgba(15,20,30,0.92)',
-        backdropFilter: 'blur(12px)',
-        WebkitBackdropFilter: 'blur(12px)',
+        background: '#0B192C',
         borderBottom: '1px solid rgba(255,255,255,0.08)',
-        padding: '0.7rem 0',
+        padding: '0.75rem 0',
         position: 'sticky',
         top: '78px',
         zIndex: 40,
+        boxShadow: '0 2px 10px rgba(0,0,0,0.15)',
       }}>
-        <div className="container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem' }}>
+        <div className="container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem', fontSize: '0.85rem' }}>
             <button
               onClick={handleBackNavigation}
               style={{
-                background: 'transparent',
-                border: 'none',
-                color: '#86EFAC',
+                background: 'rgba(255,255,255,0.08)',
+                border: '1px solid rgba(255,255,255,0.15)',
+                color: '#4ADE80',
                 fontWeight: 700,
                 cursor: 'pointer',
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '0.4rem',
-                padding: '0.35rem 0.65rem',
+                padding: '0.35rem 0.75rem',
                 borderRadius: '6px',
-                transition: 'all 0.15s ease'
+                transition: 'all 0.15s ease',
               }}
-              onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(134,239,172,0.1)'}
-              onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'rgba(74,222,128,0.15)';
+                e.currentTarget.style.borderColor = '#4ADE80';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'rgba(255,255,255,0.08)';
+                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)';
+              }}
             >
-              <ArrowLeft size={16} />
+              <ArrowLeft size={15} />
               <span>Volver al Catálogo</span>
             </button>
-            <span style={{ color: 'rgba(255,255,255,0.25)' }}>/</span>
-            <span style={{ color: 'rgba(255,255,255,0.55)', fontWeight: 600 }}>{prog.type || (isMaster ? 'Maestría' : 'Diplomado')}</span>
-            <span style={{ color: 'rgba(255,255,255,0.25)' }}>/</span>
-            <span style={{ color: 'rgba(255,255,255,0.9)', fontWeight: 700, maxWidth: '380px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            <span style={{ color: 'rgba(255,255,255,0.3)' }}>/</span>
+            <span style={{ color: '#94A3B8', fontWeight: 600 }}>{prog.type}</span>
+            <span style={{ color: 'rgba(255,255,255,0.3)' }}>/</span>
+            <span style={{ color: '#F1F5F9', fontWeight: 700, maxWidth: '360px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
               {prog.title}
             </span>
+          </div>
+
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', background: 'rgba(74,222,128,0.12)', border: '1px solid rgba(74,222,128,0.3)', borderRadius: '20px', padding: '0.2rem 0.65rem', fontSize: '0.74rem', color: '#4ADE80', fontWeight: 700 }}>
+            <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#4ADE80', boxShadow: '0 0 8px #4ADE80' }} />
+            <span>Datos en tiempo real (Base de Datos)</span>
           </div>
         </div>
       </nav>
 
-      {/* ── 2. HERO: Banner full-width a pantalla completa con botones superpuestos ── */}
+      {/* ── 2. HERO: Cabecera con banner dinámico o fondo institucional ── */}
       <section style={{
         position: 'relative',
         width: '100%',
-        margin: 0,
-        padding: 0,
+        backgroundColor: '#07101E',
         overflow: 'hidden',
-        backgroundColor: '#0F172A',
-        lineHeight: 0
+        borderBottom: '1px solid rgba(255,255,255,0.1)',
       }}>
-        {/* Imagen del Banner a todo lo ancho de la pantalla */}
-        <img
-          src={heroBannerUrl}
-          alt={prog.title || 'Banner del Programa'}
-          style={{
-            width: '100%',
-            height: 'auto',
-            minHeight: '240px',
-            maxHeight: '520px',
-            display: 'block',
-            objectFit: 'cover',
-            objectPosition: 'center',
-          }}
-        />
-
-        {/* Overlay degradado inferior para máximo contraste y legibilidad */}
-        <div style={{
-          position: 'absolute',
-          inset: 0,
-          background: 'linear-gradient(to bottom, rgba(15,23,42,0.15) 0%, rgba(15,23,42,0.3) 50%, rgba(15,23,42,0.85) 100%)',
-          pointerEvents: 'none',
-        }} />
-
-        {/* Botones de acción SUPERPUESTOS directamente sobre el Banner */}
-        <div className="hero-buttons-overlay" style={{
-          position: 'absolute',
-          bottom: '1.25rem',
-          right: '1.5rem',
-          display: 'flex',
-          gap: '0.85rem',
-          flexWrap: 'wrap',
-          alignItems: 'center',
-          justifyContent: 'flex-end',
-          zIndex: 10,
-        }}>
-          {/* BOTÓN DESCARGA DIRECTA DE CONVOCATORIA (Verde Esmeralda Corporativo) */}
-          <a
-            href={directDownloadConvocatoria}
-            target="_blank"
-            rel="noopener noreferrer"
-            download
-            style={{
-              background: 'linear-gradient(135deg, #059669 0%, #10B981 100%)',
-              color: '#FFFFFF',
-              fontWeight: 800,
-              fontSize: '0.92rem',
-              padding: '0.8rem 1.6rem',
-              borderRadius: '10px',
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '0.6rem',
-              border: '1.5px solid rgba(255, 255, 255, 0.35)',
-              boxShadow: '0 8px 24px rgba(0, 0, 0, 0.45), 0 2px 8px rgba(5, 150, 105, 0.4)',
-              textDecoration: 'none',
-              cursor: 'pointer',
-              transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
-              backdropFilter: 'blur(8px)',
-              WebkitBackdropFilter: 'blur(8px)',
-              whiteSpace: 'nowrap',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'translateY(-2px) scale(1.02)';
-              e.currentTarget.style.boxShadow = '0 12px 30px rgba(0, 0, 0, 0.55), 0 4px 14px rgba(16, 185, 129, 0.5)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'translateY(0) scale(1)';
-              e.currentTarget.style.boxShadow = '0 8px 24px rgba(0, 0, 0, 0.45), 0 2px 8px rgba(5, 150, 105, 0.4)';
-            }}
-          >
-            <Download size={18} strokeWidth={2.4} />
-            <span>Descargar Convocatoria Oficial (PDF)</span>
-          </a>
-
-          {/* BOTÓN CONSULTAR POR WHATSAPP (Verde WhatsApp Vibrante) */}
-          <a
-            href={`https://wa.me/59176543210?text=${whatsappMessage}`}
-            target="_blank"
-            rel="noreferrer"
-            style={{
-              background: 'linear-gradient(135deg, #25D366 0%, #128C7E 100%)',
-              color: '#FFFFFF',
-              fontWeight: 800,
-              fontSize: '0.92rem',
-              padding: '0.8rem 1.6rem',
-              borderRadius: '10px',
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '0.55rem',
-              border: '1.5px solid rgba(255, 255, 255, 0.3)',
-              boxShadow: '0 8px 24px rgba(0, 0, 0, 0.45), 0 2px 8px rgba(37, 211, 102, 0.4)',
-              textDecoration: 'none',
-              cursor: 'pointer',
-              transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
-              backdropFilter: 'blur(8px)',
-              WebkitBackdropFilter: 'blur(8px)',
-              whiteSpace: 'nowrap',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'translateY(-2px) scale(1.02)';
-              e.currentTarget.style.boxShadow = '0 12px 30px rgba(0, 0, 0, 0.55), 0 4px 14px rgba(37, 211, 102, 0.5)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'translateY(0) scale(1)';
-              e.currentTarget.style.boxShadow = '0 8px 24px rgba(0, 0, 0, 0.45), 0 2px 8px rgba(37, 211, 102, 0.4)';
-            }}
-          >
-            <MessageCircle size={18} color="#FFFFFF" strokeWidth={2.4} />
-            <span>Consultar por WhatsApp</span>
-          </a>
-        </div>
-      </section>
-
-      {/* ── 3. Quick Info Strip: Pegado directamente sin espacios, variedad de colores en métricas ── */}
-      <section style={{ position: 'relative', zIndex: 20, margin: 0, padding: 0 }}>
-        <div style={{
-          background: '#0B132B',
-          borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-          margin: 0,
-          padding: 0,
-        }} className="quick-info-strip">
-
-          {[
-            {
-              label: 'MODALIDAD',
-              value: prog.modality || 'Híbrida Turno Noche',
-              sub: 'Clases virtuales síncronas grabadas',
-              accent: '#34D399',
-              bg: 'rgba(52, 211, 153, 0.08)',
-              border: 'rgba(52, 211, 153, 0.2)'
-            },
-            {
-              label: 'DURACIÓN Y CRÉDITOS',
-              value: prog.duration || (isMaster ? '24 meses' : '6 Meses'),
-              sub: prog.credits ? `${prog.credits} Créditos CEUB` : 'Acreditado SNC CEUB',
-              accent: '#60A5FA',
-              bg: 'rgba(96, 165, 250, 0.08)',
-              border: 'rgba(96, 165, 250, 0.2)'
-            },
-            {
-              label: 'SEDE Y CAMPUS',
-              value: 'Campus Universitario Cota Cota',
-              sub: 'Edificio FCPN, La Paz, Bolivia',
-              accent: '#C084FC',
-              bg: 'rgba(192, 132, 252, 0.08)',
-              border: 'rgba(192, 132, 252, 0.2)'
-            },
-            {
-              label: 'GRADO ACADÉMICO',
-              value: prog.degree || (isMaster ? 'M.Sc. en Ciencia de Datos' : 'Diploma de Posgrado'),
-              sub: 'Homologación CEUB / UMSA',
-              accent: '#FB923C',
-              bg: 'rgba(251, 146, 60, 0.08)',
-              border: 'rgba(251, 146, 60, 0.2)'
-            },
-          ].map((item, i) => (
-            <div key={i} style={{
-              padding: '1.15rem 1.4rem',
-              borderRight: i < 3 ? '1px solid rgba(255, 255, 255, 0.08)' : 'none',
-              background: item.bg,
-              transition: 'background 0.2s ease',
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'center',
-            }}>
-              <div style={{
-                fontSize: '0.68rem',
-                fontWeight: 800,
-                color: item.accent,
-                textTransform: 'uppercase',
-                letterSpacing: '0.08em',
-                marginBottom: '0.25rem',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.35rem'
-              }}>
-                <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: item.accent }} />
-                <span>{item.label}</span>
-              </div>
-              <div style={{ fontSize: '0.95rem', fontWeight: 800, color: '#FFFFFF', lineHeight: 1.3 }}>
-                {item.value}
-              </div>
-              <div style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.55)', marginTop: '0.2rem' }}>
-                {item.sub}
-              </div>
-            </div>
-          ))}
-
-        </div>
-      </section>
-
-      {/* ── 4. Navegación de Pestañas — conectada directamente sin huecos vacíos ── */}
-      <div style={{ background: '#F8FAFC', padding: 0 }}>
-        <div className="container" style={{ paddingTop: '1.25rem' }}>
-
-        {/* DESKTOP: TAB BUTTONS BAR - Todos visibles en pantalla */}
-        <div className="program-nav-tabs-desktop" style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(5, 1fr)',
-          gap: '0.5rem',
-          paddingBottom: '0.75rem',
-          marginBottom: '2rem',
-          borderBottom: '2px solid #DCE1E6'
-        }}>
-          {tabConfigs.map((tab) => {
-            const isActive = activeTab === tab.id;
-            const IconComponent = tab.icon;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '0.45rem',
-                  padding: '0.75rem 0.5rem',
-                  borderRadius: '8px',
-                  border: isActive ? `1.5px solid ${tab.color}` : `1.5px solid ${tab.borderColor}`,
-                  background: isActive ? tab.gradient : '#FFFFFF',
-                  color: isActive ? '#FFFFFF' : '#373A40',
-                  boxShadow: isActive ? '0 4px 14px rgba(0,100,0,0.22)' : '0 1px 3px rgba(55,58,64,0.04)',
-                  fontSize: '0.85rem',
-                  fontWeight: 800,
-                  cursor: 'pointer',
-                  whiteSpace: 'nowrap',
-                  transition: 'all 0.18s cubic-bezier(0.16, 1, 0.3, 1)',
-                  justifyContent: 'center',
-                  width: '100%',
-                }}
-                onMouseEnter={(e) => {
-                  if (!isActive) {
-                    e.currentTarget.style.background = tab.subtleBg;
-                    e.currentTarget.style.borderColor = tab.color;
-                    e.currentTarget.style.transform = 'translateY(-1px)';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!isActive) {
-                    e.currentTarget.style.background = '#FFFFFF';
-                    e.currentTarget.style.borderColor = tab.borderColor;
-                    e.currentTarget.style.transform = 'translateY(0)';
-                  }
-                }}
-              >
-                <div style={{
-                  width: '22px', height: '22px', borderRadius: '5px', display: 'flex',
-                  alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-                  background: isActive ? 'rgba(255,255,255,0.22)' : tab.subtleBg,
-                  color: isActive ? '#FFFFFF' : tab.color
-                }}>
-                  <IconComponent size={14} />
-                </div>
-                <span>{tab.label}</span>
-              </button>
-            );
-          })}
-        </div>
-
-        {/* MÓVIL: Barra Desplegable 100% Responsiva */}
-        <div className="program-nav-tabs-mobile" style={{ marginBottom: '1.75rem' }}>
-          <div style={{ position: 'relative', width: '100%' }}>
-            <label htmlFor="tab-dropdown-select" style={{
-              display: 'block',
-              fontSize: '0.75rem',
-              fontWeight: 800,
-              color: '#006400',
-              textTransform: 'uppercase',
-              letterSpacing: '0.05em',
-              marginBottom: '0.35rem'
-            }}>
-              Sección del Programa
-            </label>
-            <div style={{ position: 'relative' }}>
-              <select
-                id="tab-dropdown-select"
-                value={activeTab}
-                onChange={(e) => setActiveTab(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '0.85rem 2.5rem 0.85rem 1rem',
-                  borderRadius: '10px',
-                  border: '2px solid #006400',
-                  background: '#FFFFFF',
-                  color: '#006400',
-                  fontWeight: 800,
-                  fontSize: '0.95rem',
-                  appearance: 'none',
-                  WebkitAppearance: 'none',
-                  boxShadow: '0 4px 12px rgba(0, 100, 0, 0.1)',
-                  cursor: 'pointer'
-                }}
-              >
-                {tabConfigs.map((t) => (
-                  <option key={t.id} value={t.id} style={{ color: '#373A40', fontWeight: 600 }}>
-                    {t.label}
-                  </option>
-                ))}
-              </select>
-              <div style={{
-                position: 'absolute',
-                right: '1rem',
-                top: '50%',
-                transform: 'translateY(-50%)',
-                pointerEvents: 'none',
-                color: '#006400',
-                display: 'flex',
-                alignItems: 'center'
-              }}>
-                <ChevronDown size={20} strokeWidth={2.5} />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* ── LAYOUT PRINCIPAL: 2 columnas — contenido tabs (izq) + post lateral (der) ── */}
-        <div className="tab-layout-grid" style={{
-          display: 'grid',
-          gridTemplateColumns: '1fr 280px',
-          gap: '1.75rem',
-          alignItems: 'start',
-        }}>
-
-          {/* ── Columna izquierda: contenido de pestañas ── */}
-          <div>
-
-        {/* ── TAB 1: PERFIL ACADÉMICO ── */}
-        {activeTab === 'perfil' && (
-          <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-            
-            {/* Visual Header Banner Corporativo */}
+        {heroBannerUrl ? (
+          <div style={{ position: 'relative', maxHeight: '380px', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <img
+              src={heroBannerUrl}
+              alt={prog.title}
+              style={{
+                width: '100%',
+                height: 'auto',
+                minHeight: '240px',
+                maxHeight: '380px',
+                objectFit: 'cover',
+                objectPosition: 'center',
+                display: 'block',
+              }}
+            />
             <div style={{
-              background: 'linear-gradient(135deg, #2A5A84 0%, #4682B4 100%)',
-              color: '#FFFFFF',
-              borderRadius: '12px',
-              padding: '1.75rem 2rem',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              flexWrap: 'wrap',
-              gap: '1.25rem',
-              boxShadow: '0 6px 20px rgba(70, 130, 180, 0.25)'
-            }}>
-              <div style={{ maxWidth: '640px' }}>
-                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', background: 'rgba(255,255,255,0.18)', padding: '0.25rem 0.65rem', borderRadius: '99px', fontSize: '0.78rem', fontWeight: 700, marginBottom: '0.6rem' }}>
-                  <Sparkles size={14} />
-                  <span>Excelencia Académica de Posgrado</span>
-                </div>
-                <h3 style={{ margin: '0 0 0.35rem 0', fontSize: '1.35rem', fontWeight: 800, color: '#FFFFFF' }}>
-                  Perfil Académico & Oportunidades Profesionales
-                </h3>
-                <p style={{ margin: 0, fontSize: '0.9rem', color: '#E6EBF5', lineHeight: 1.5 }}>
-                  Formación rigurosa orientada a resolver problemas cuantitativos complejos en sectores estratégicos.
-                </p>
-              </div>
-
-              <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap' }}>
-                <div style={{ background: 'rgba(255, 255, 255, 0.14)', backdropFilter: 'blur(8px)', padding: '0.65rem 1rem', borderRadius: '8px', textAlign: 'center', border: '1px solid rgba(255,255,255,0.25)' }}>
-                  <div style={{ fontSize: '1.25rem', fontWeight: 900 }}>100%</div>
-                  <div style={{ fontSize: '0.72rem', color: '#E6EBF5' }}>Acreditado CEUB</div>
-                </div>
-                <div style={{ background: 'rgba(255, 255, 255, 0.14)', backdropFilter: 'blur(8px)', padding: '0.65rem 1rem', borderRadius: '8px', textAlign: 'center', border: '1px solid rgba(255,255,255,0.25)' }}>
-                  <div style={{ fontSize: '1.25rem', fontWeight: 900 }}>4to Nivel</div>
-                  <div style={{ fontSize: '0.72rem', color: '#E6EBF5' }}>Grado Científico</div>
-                </div>
-              </div>
-            </div>
-
-            {/* Perfil del Aspirante & Áreas */}
-            <div style={cleanPanelStyle}>
-              <div style={sectionHeaderStyle('#E6EBF5', '#4682B4')}>
-                <div style={iconBadgeStyle('#E6EBF5', '#4682B4')}>
-                  <Compass size={22} />
-                </div>
-                <div>
-                  <h3 style={sectionTitleStyle}>¿A quiénes va dirigido? (Perfil del Aspirante)</h3>
-                  <p style={sectionSubtitleStyle}>Requisitos de formación previa y perfil de ingreso idóneo</p>
-                </div>
-              </div>
-
-              <div style={{
-                background: '#EBE6DA',
-                borderRadius: '8px',
-                padding: '1.25rem 1.5rem',
-                border: '1px solid #DCE1E6',
-                fontSize: '0.98rem',
-                color: '#373A40',
-                lineHeight: 1.75,
-                whiteSpace: 'pre-line'
-              }}>
-                {targetAudienceText}
-              </div>
-
-              {/* Tarjetas Visuales con Iconos de Áreas Profesionales */}
-              <div style={{ marginTop: '1.5rem' }}>
-                <div style={{ fontSize: '0.82rem', fontWeight: 800, color: '#006400', textTransform: 'uppercase', marginBottom: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                  <Lightbulb size={16} color="#006400" />
-                  <span>Áreas Disciplinares y Profesionales Idóneas:</span>
-                </div>
-
-                <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-                  gap: '0.85rem'
-                }}>
-                  {[
-                    { title: 'Estadística & Biometría', desc: 'Modelación, muestreo e inferencia', icon: BarChart3, color: '#006400', bg: '#DCF5DC' },
-                    { title: 'Informática & Sistemas', desc: 'Arquitectura de datos y computación', icon: Code2, color: '#4682B4', bg: '#E6EBF5' },
-                    { title: 'Matemáticas & Física', desc: 'Fundamentación probabilística', icon: Brain, color: '#006400', bg: '#DCF5DC' },
-                    { title: 'Economía & Finanzas', desc: 'Econometría y series de tiempo', icon: Database, color: '#4682B4', bg: '#E6EBF5' }
-                  ].map((area, idx) => {
-                    const AreaIcon = area.icon;
-                    return (
-                      <div key={idx} style={{
-                        background: '#FFFFFF',
-                        border: '1.5px solid #DCE1E6',
-                        borderRadius: '8px',
-                        padding: '1rem',
-                        display: 'flex',
-                        alignItems: 'flex-start',
-                        gap: '0.75rem',
-                        transition: 'all 0.15s ease'
-                      }}>
-                        <div style={{ width: '36px', height: '36px', borderRadius: '6px', background: area.bg, color: area.color, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                          <AreaIcon size={18} />
-                        </div>
-                        <div>
-                          <div style={{ fontWeight: 800, fontSize: '0.9rem', color: '#373A40' }}>{area.title}</div>
-                          <div style={{ fontSize: '0.78rem', color: '#646973', marginTop: '0.15rem' }}>{area.desc}</div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-
-            {/* Perfil del Graduado */}
-            <div style={cleanPanelStyle}>
-              <div style={sectionHeaderStyle('#DCF5DC', '#006400')}>
-                <div style={iconBadgeStyle('#DCF5DC', '#006400')}>
-                  <GraduationCap size={22} />
-                </div>
-                <div>
-                  <h3 style={sectionTitleStyle}>Perfil del Graduado & Competencias</h3>
-                  <p style={sectionSubtitleStyle}>Capacidades científicas, analíticas y de liderazgo que desarrollará el egresado</p>
-                </div>
-              </div>
-
-              <div style={{
-                background: '#EBE6DA',
-                borderRadius: '8px',
-                padding: '1.25rem 1.5rem',
-                border: '1px solid #DCE1E6',
-                fontSize: '0.98rem',
-                color: '#373A40',
-                lineHeight: 1.75,
-                whiteSpace: 'pre-line',
-                marginBottom: '1.5rem'
-              }}>
-                {graduateProfileText}
-              </div>
-
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
-                gap: '1rem'
-              }}>
-                <div style={{ background: '#FFFFFF', border: '1.5px solid #DCE1E6', borderRadius: '8px', padding: '1.25rem', boxShadow: '0 2px 6px rgba(55,58,64,0.03)' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.4rem' }}>
-                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#006400' }} />
-                    <div style={{ fontWeight: 800, color: '#373A40', fontSize: '0.95rem' }}>
-                      Modelación & Analítica Avanzada
-                    </div>
-                  </div>
-                  <p style={{ margin: 0, fontSize: '0.85rem', color: '#646973', lineHeight: 1.55 }}>
-                    Capacidad para estructurar e interpretar modelos estocásticos, algoritmos predictivos y aprendizaje automático sobre datos complejos.
-                  </p>
-                </div>
-
-                <div style={{ background: '#FFFFFF', border: '1.5px solid #DCE1E6', borderRadius: '8px', padding: '1.25rem', boxShadow: '0 2px 6px rgba(55,58,64,0.03)' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.4rem' }}>
-                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#4682B4' }} />
-                    <div style={{ fontWeight: 800, color: '#373A40', fontSize: '0.95rem' }}>
-                      Toma de Decisiones Estratégicas
-                    </div>
-                  </div>
-                  <p style={{ margin: 0, fontSize: '0.85rem', color: '#646973', lineHeight: 1.55 }}>
-                    Liderazgo de proyectos analíticos en instituciones financieras, entidades públicas, organismos internacionales e industria tecnológica.
-                  </p>
-                </div>
-
-                <div style={{ background: '#FFFFFF', border: '1.5px solid #DCE1E6', borderRadius: '8px', padding: '1.25rem', boxShadow: '0 2px 6px rgba(55,58,64,0.03)' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.4rem' }}>
-                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#32CD32' }} />
-                    <div style={{ fontWeight: 800, color: '#373A40', fontSize: '0.95rem' }}>
-                      Investigación Reproducible
-                    </div>
-                  </div>
-                  <p style={{ margin: 0, fontSize: '0.85rem', color: '#646973', lineHeight: 1.55 }}>
-                    Generación de nuevo conocimiento mediante publicaciones indexadas y proyectos reproducibles con R, Python y entornos modernos.
-                  </p>
-                </div>
-              </div>
-            </div>
-
+              position: 'absolute',
+              inset: 0,
+              background: 'linear-gradient(to top, rgba(7,16,30,0.95) 0%, rgba(7,16,30,0.5) 60%, rgba(7,16,30,0.2) 100%)',
+              pointerEvents: 'none',
+            }} />
           </div>
+        ) : (
+          <div style={{
+            height: '140px',
+            background: 'linear-gradient(135deg, #0B192C 0%, #1E3A8A 50%, #065F46 100%)',
+          }} />
         )}
 
-        {/* ── TAB 2: MATERIAS & MALLA CURRICULAR (#006400 Institucional) ── */}
-        {activeTab === 'materias' && (
-          <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '1.75rem' }}>
-            
-            {/* Header del bloque con botón de Descarga Directa */}
-            <div style={{
-              background: 'linear-gradient(135deg, #004D00 0%, #006400 100%)',
-              color: '#FFFFFF',
-              borderRadius: '12px',
-              padding: '1.5rem 2rem',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              flexWrap: 'wrap',
-              gap: '1rem',
-              boxShadow: '0 6px 20px rgba(0, 100, 0, 0.3)'
-            }}>
-              <div>
-                <h3 style={{ margin: 0, fontSize: '1.3rem', fontWeight: 800, color: '#FFFFFF' }}>
-                  Plan de Estudios y Estructura Modular
-                </h3>
-                <div style={{ fontSize: '0.875rem', color: '#DCF5DC', marginTop: '0.25rem' }}>
-                  Homologado por el CEUB | Total: <strong>{prog.credits || '72'} créditos</strong> | Modalidad: <strong>{prog.modality || 'Híbrida'}</strong>
-                </div>
+        {/* Barra de Título y Botones */}
+        <div className="container" style={{
+          position: 'relative',
+          marginTop: heroBannerUrl ? '-4.5rem' : '-2.5rem',
+          paddingBottom: '1.75rem',
+          zIndex: 10,
+        }}>
+          <div style={{
+            display: 'flex',
+            alignItems: 'flex-end',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: '1.25rem',
+          }}>
+            <div style={{ maxWidth: '720px' }}>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.45rem', background: isMaster ? 'rgba(5,150,105,0.92)' : 'rgba(30,58,138,0.92)', color: '#FFFFFF', padding: '0.3rem 0.75rem', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '0.6rem' }}>
+                <GraduationCap size={14} />
+                <span>{prog.type}</span>
               </div>
 
-              {/* BOTÓN DESCARGA DIRECTA DE MALLA EN PDF */}
-              <a
-                href={directDownloadMalla}
-                target="_blank"
-                rel="noopener noreferrer"
-                download
-                style={{
-                  background: '#FFFFFF',
-                  color: '#006400',
-                  borderRadius: '6px',
-                  padding: '0.7rem 1.35rem',
-                  fontSize: '0.9rem',
-                  fontWeight: 800,
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  textDecoration: 'none',
-                  border: '1.5px solid #32CD32',
-                  boxShadow: '0 3px 10px rgba(0, 0, 0, 0.12)',
-                  cursor: 'pointer'
-                }}
-              >
-                <Download size={17} />
-                <span>Descargar Malla Curricular (PDF)</span>
-              </a>
+              <h1 style={{
+                color: '#FFFFFF',
+                fontSize: 'clamp(1.75rem, 3.8vw, 2.7rem)',
+                fontWeight: 900,
+                lineHeight: 1.18,
+                margin: '0 0 0.5rem 0',
+                textShadow: '0 2px 14px rgba(0,0,0,0.6)',
+              }}>
+                {prog.title}
+              </h1>
+
+              <p style={{
+                color: '#CBD5E1',
+                fontSize: '0.98rem',
+                margin: 0,
+                lineHeight: 1.5,
+                textShadow: '0 1px 8px rgba(0,0,0,0.5)',
+              }}>
+                {prog.mencion ? `Mención: ${prog.mencion} · ` : ''}
+                {prog.area ? `Área: ${prog.area} · ` : ''}
+                Unidad de Posgrado de la Carrera de Estadística — UMSA
+              </p>
             </div>
 
-            {/* Render de asignaturas */}
-            {curriculum.length === 0 ? (
-              <div style={{
-                background: '#FFFFFF',
-                border: '1.5px dashed #C8CDD2',
-                borderRadius: '10px',
-                padding: '3rem 2rem',
-                textAlign: 'center',
-                color: '#646973'
-              }}>
-                <BookOpen size={40} style={{ color: '#006400', marginBottom: '0.75rem' }} />
-                <h4 style={{ margin: '0 0 0.5rem 0', color: '#373A40', fontWeight: 800 }}>Plan de Estudios Modular</h4>
-                <p style={{ margin: '0 0 1.25rem 0', fontSize: '0.9rem', maxWidth: '500px', marginLeft: 'auto', marginRight: 'auto' }}>
-                  El plan de estudios detallado se encuentra registrado en el documento oficial de convocatoria descargable.
-                </p>
+            {/* Botones de Acción */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+              {directInscripcionUrl && (
+                <a
+                  href={directInscripcionUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  style={{
+                    background: 'linear-gradient(135deg, #059669 0%, #10B981 100%)',
+                    color: '#FFFFFF',
+                    fontWeight: 800,
+                    fontSize: '0.92rem',
+                    padding: '0.75rem 1.4rem',
+                    borderRadius: '8px',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    textDecoration: 'none',
+                    boxShadow: '0 6px 20px rgba(5,150,105,0.4)',
+                    transition: 'all 0.2s ease',
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
+                  onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+                >
+                  <FileCheck2 size={17} />
+                  <span>Formulario de Postulación</span>
+                </a>
+              )}
+
+              {directDownloadConvocatoria && (
                 <a
                   href={directDownloadConvocatoria}
                   target="_blank"
                   rel="noopener noreferrer"
                   download
-                  className="btn btn-secondary btn-sm"
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', borderColor: '#006400', color: '#006400' }}
-                >
-                  <Download size={14} />
-                  <span>Descargar Convocatoria con Malla (PDF)</span>
-                </a>
-              </div>
-            ) : (
-              <div>
-                {/* Selector de Semestre / Módulo si hay varios */}
-                {curriculum.length > 1 && (
-                  <div style={{
-                    display: 'flex',
+                  style={{
+                    background: 'rgba(255,255,255,0.95)',
+                    color: '#0F172A',
+                    fontWeight: 800,
+                    fontSize: '0.92rem',
+                    padding: '0.75rem 1.35rem',
+                    borderRadius: '8px',
+                    display: 'inline-flex',
+                    alignItems: 'center',
                     gap: '0.5rem',
-                    overflowX: 'auto',
-                    paddingBottom: '0.65rem',
-                    marginBottom: '1.25rem',
-                    borderBottom: '1px solid #DCE1E6'
-                  }}>
-                    {curriculum.map((sem, sIdx) => (
-                      <button
-                        key={sIdx}
-                        onClick={() => setActiveSemesterTab(sIdx)}
-                        style={{
-                          background: activeSemesterTab === sIdx ? '#006400' : '#FFFFFF',
-                          color: activeSemesterTab === sIdx ? '#FFFFFF' : '#373A40',
-                          border: activeSemesterTab === sIdx ? '1.5px solid #006400' : '1.5px solid #DCE1E6',
-                          borderRadius: '6px',
-                          padding: '0.6rem 1.15rem',
-                          fontWeight: 700,
-                          fontSize: '0.875rem',
-                          cursor: 'pointer',
-                          whiteSpace: 'nowrap',
-                          boxShadow: activeSemesterTab === sIdx ? '0 2px 8px rgba(0, 100, 0, 0.3)' : 'none',
-                          transition: 'all 0.15s ease'
-                        }}
-                      >
-                        {sem.semester}
-                        <span style={{
-                          marginLeft: '0.45rem',
-                          fontSize: '0.75rem',
-                          opacity: activeSemesterTab === sIdx ? 0.95 : 0.7,
-                          background: activeSemesterTab === sIdx ? 'rgba(255,255,255,0.25)' : '#E6EBF5',
-                          padding: '0.15rem 0.45rem',
-                          borderRadius: '99px'
-                        }}>
-                          {sem.modules?.length || 0}
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                )}
+                    textDecoration: 'none',
+                    boxShadow: '0 4px 16px rgba(0,0,0,0.25)',
+                    transition: 'all 0.2s ease',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = '#FFFFFF';
+                    e.currentTarget.style.transform = 'translateY(-2px)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'rgba(255,255,255,0.95)';
+                    e.currentTarget.style.transform = 'translateY(0)';
+                  }}
+                >
+                  <Download size={16} color="#059669" />
+                  <span>Convocatoria (PDF)</span>
+                </a>
+              )}
 
-                {/* Mostrar materias del semestre activo */}
-                {curriculum[activeSemesterTab] && (
-                  <div>
-                    <div style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      marginBottom: '1rem',
-                      padding: '0.25rem 0'
-                    }}>
-                      <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#373A40' }}>
-                        {curriculum[activeSemesterTab].semester}
-                      </div>
-                      <span style={{ fontSize: '0.825rem', color: '#006400', fontWeight: 700, background: '#DCF5DC', padding: '0.25rem 0.65rem', borderRadius: '6px' }}>
-                        {curriculum[activeSemesterTab].modules.length} materias programadas
-                      </span>
-                    </div>
-
-                    <div style={{ display: 'grid', gap: '1rem' }}>
-                      {curriculum[activeSemesterTab].modules.map((mod, mIdx) => (
-                        <div
-                          key={mIdx}
-                          style={{
-                            background: '#FFFFFF',
-                            border: '1.5px solid #DCE1E6',
-                            borderRadius: '8px',
-                            padding: '1.25rem 1.5rem',
-                            boxShadow: '0 2px 6px rgba(55, 58, 64, 0.03)'
-                          }}
-                        >
-                          <div style={{
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'flex-start',
-                            flexWrap: 'wrap',
-                            gap: '0.75rem',
-                            marginBottom: '0.5rem'
-                          }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', flexWrap: 'wrap' }}>
-                              <span style={{
-                                fontFamily: 'monospace',
-                                fontWeight: 800,
-                                fontSize: '0.825rem',
-                                color: '#006400',
-                                background: '#DCF5DC',
-                                padding: '0.25rem 0.65rem',
-                                borderRadius: '4px',
-                                border: '1px solid #98DF98'
-                              }}>
-                                {mod.code}
-                              </span>
-                              <h4 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 800, color: '#373A40' }}>
-                                {mod.name}
-                              </h4>
-                            </div>
-
-                            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
-                              <span style={{
-                                fontSize: '0.78rem',
-                                fontWeight: 700,
-                                color: '#373A40',
-                                background: '#E6EBF5',
-                                padding: '0.25rem 0.6rem',
-                                borderRadius: '4px'
-                              }}>
-                                {mod.credits} Créditos ({mod.hours} hrs)
-                              </span>
-                              <span style={{
-                                fontSize: '0.78rem',
-                                fontWeight: 600,
-                                color: '#006400',
-                                background: '#DCF5DC',
-                                padding: '0.25rem 0.6rem',
-                                borderRadius: '4px',
-                                border: '1px solid #98DF98'
-                              }}>
-                                {mod.type || 'Teórico-Práctica'}
-                              </span>
-                            </div>
-                          </div>
-
-                          {mod.desc && (
-                            <p style={{ fontSize: '0.9rem', color: '#646973', margin: '0.5rem 0', lineHeight: 1.6 }}>
-                              {mod.desc}
-                            </p>
-                          )}
-
-                          <div style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '1.5rem',
-                            fontSize: '0.825rem',
-                            color: '#646973',
-                            flexWrap: 'wrap',
-                            borderTop: '1px dashed #DCE1E6',
-                            paddingTop: '0.65rem',
-                            marginTop: '0.5rem'
-                          }}>
-                            {mod.software && (
-                              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', color: '#006400', fontWeight: 600 }}>
-                                <Laptop size={14} color="#006400" />
-                                <span><strong>Herramientas:</strong> {mod.software}</span>
-                              </div>
-                            )}
-                            {mod.prerequisites && mod.prerequisites !== 'Ninguno' && (
-                              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', color: '#B8860B' }}>
-                                <span><strong>Prerrequisito:</strong> {mod.prerequisites}</span>
-                              </div>
-                            )}
-                            {mod.docentes && (
-                              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', color: '#4682B4' }}>
-                                <Users size={14} color="#4682B4" />
-                                <span><strong>Docente:</strong> {mod.docentes}</span>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* ── TAB 3: EQUIPO DOCENTE (#4682B4 Azul Acero & #6495ED) ── */}
-        {activeTab === 'docentes' && (
-          <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '1.75rem' }}>
-            
-            <div style={cleanPanelStyle}>
-              <div style={sectionHeaderStyle('#E6EBF5', '#4682B4')}>
-                <div style={iconBadgeStyle('#E6EBF5', '#4682B4')}>
-                  <Users size={22} />
-                </div>
-                <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem' }}>
-                  <div>
-                    <h3 style={sectionTitleStyle}>Planta Docente & Investigadores</h3>
-                    <p style={sectionSubtitleStyle}>Profesores con títulos de Doctorado (Ph.D.) y Maestría de universidades de prestigio</p>
-                  </div>
-                  <span style={{ fontSize: '0.82rem', color: '#006400', fontWeight: 700, background: '#DCF5DC', border: '1px solid #98DF98', padding: '0.35rem 0.75rem', borderRadius: '6px' }}>
-                    Catedráticos Acreditados CEUB
-                  </span>
-                </div>
-              </div>
-
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-                gap: '1.25rem'
-              }}>
-                {facultyData.map((doc, idx) => {
-                  const DOC_COLORS = [
-                    { theme: '#2563EB', lightBg: '#EFF6FF', border: '#BFDBFE', darkText: '#1D4ED8' },
-                    { theme: '#059669', lightBg: '#ECFDF5', border: '#A7F3D0', darkText: '#047857' },
-                    { theme: '#7C3AED', lightBg: '#F5F3FF', border: '#DDD6FE', darkText: '#6D28D9' },
-                    { theme: '#D97706', lightBg: '#FFFBEB', border: '#FDE68A', darkText: '#B45309' },
-                    { theme: '#0891B2', lightBg: '#ECFEFF', border: '#A5F3FC', darkText: '#0E7490' },
-                    { theme: '#DC2626', lightBg: '#FEF2F2', border: '#FECACA', darkText: '#B91C1C' }
-                  ];
-                  const col = DOC_COLORS[idx % DOC_COLORS.length];
-
-                  return (
-                    <div
-                      key={doc.id}
-                      style={{
-                        background: '#FFFFFF',
-                        border: `1.5px solid ${col.border}`,
-                        borderTop: `4px solid ${col.theme}`,
-                        borderRadius: '10px',
-                        padding: '1.4rem',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        justifyContent: 'space-between',
-                        boxShadow: '0 4px 14px rgba(0, 0, 0, 0.04)',
-                        transition: 'all 0.18s ease'
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.transform = 'translateY(-3px)';
-                        e.currentTarget.style.boxShadow = '0 8px 22px rgba(0, 0, 0, 0.08)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.transform = 'translateY(0)';
-                        e.currentTarget.style.boxShadow = '0 4px 14px rgba(0, 0, 0, 0.04)';
-                      }}
-                    >
-                      <div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', marginBottom: '0.85rem' }}>
-                          <img
-                            src={doc.avatar}
-                            alt={doc.name}
-                            style={{
-                              width: '58px',
-                              height: '58px',
-                              borderRadius: '50%',
-                              objectFit: 'cover',
-                              border: `2.5px solid ${col.theme}`,
-                              boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-                            }}
-                          />
-                          <div>
-                            <h4 style={{ margin: '0 0 0.15rem 0', fontSize: '1rem', fontWeight: 900, color: '#1E293B' }}>
-                              {doc.name}
-                            </h4>
-                            <div style={{
-                              display: 'inline-block',
-                              fontSize: '0.74rem',
-                              color: col.darkText,
-                              background: col.lightBg,
-                              border: `1px solid ${col.border}`,
-                              fontWeight: 800,
-                              padding: '0.15rem 0.5rem',
-                              borderRadius: '4px',
-                              marginTop: '0.15rem'
-                            }}>
-                              {doc.degree}
-                            </div>
-                            <div style={{ fontSize: '0.74rem', color: '#64748B', marginTop: '0.2rem' }}>
-                              {doc.university}
-                            </div>
-                          </div>
-                        </div>
-
-                        <p style={{ fontSize: '0.84rem', color: '#475569', lineHeight: 1.55, margin: '0 0 0.85rem 0' }}>
-                          {doc.bio}
-                        </p>
-                      </div>
-
-                      <div style={{ borderTop: '1px solid #E2E8F0', paddingTop: '0.75rem' }}>
-                        <div style={{ fontSize: '0.7rem', fontWeight: 800, color: col.theme, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '0.2rem' }}>
-                          Especialidad / Línea:
-                        </div>
-                        <div style={{ fontSize: '0.82rem', color: '#1E293B', fontWeight: 600 }}>
-                          {doc.specialty}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-          </div>
-        )}
-
-        {/* ── TAB 4: REQUISITOS DE ADMISIÓN (Verde Corporativo & Checklist Interactivo) ── */}
-        {activeTab === 'requisitos' && (
-          <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '1.75rem' }}>
-            
-            {/* Banner de Descarga Directa de Requisitos */}
-            <div style={{
-              background: 'linear-gradient(135deg, #004D00 0%, #006400 100%)',
-              color: '#FFFFFF',
-              borderRadius: '12px',
-              padding: '1.75rem 2rem',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              flexWrap: 'wrap',
-              gap: '1.25rem',
-              boxShadow: '0 6px 20px rgba(0, 100, 0, 0.3)'
-            }}>
-              <div>
-                <h3 style={{ margin: '0 0 0.4rem 0', fontSize: '1.3rem', fontWeight: 800, color: '#FFFFFF' }}>
-                  Documento Oficial de Convocatoria & Requisitos
-                </h3>
-                <p style={{ margin: 0, fontSize: '0.92rem', color: '#DCF5DC', maxWidth: '600px' }}>
-                  Descarga directa en formato PDF con las bases, perfil de postulación, cronograma y etapas de selección.
-                </p>
-              </div>
-
-              {/* BOTÓN DESCARGA DIRECTA */}
               <a
-                href={directDownloadConvocatoria}
+                href={`https://wa.me/59176543210?text=${whatsappMessage}`}
                 target="_blank"
-                rel="noopener noreferrer"
-                download
+                rel="noreferrer"
                 style={{
-                  background: '#FFFFFF',
-                  color: '#006400',
-                  borderRadius: '6px',
-                  padding: '0.8rem 1.6rem',
-                  fontSize: '0.925rem',
+                  background: 'linear-gradient(135deg, #25D366 0%, #128C7E 100%)',
+                  color: '#FFFFFF',
                   fontWeight: 800,
+                  fontSize: '0.92rem',
+                  padding: '0.75rem 1.25rem',
+                  borderRadius: '8px',
                   display: 'inline-flex',
                   alignItems: 'center',
                   gap: '0.5rem',
                   textDecoration: 'none',
-                  border: '1.5px solid #32CD32',
-                  boxShadow: '0 4px 14px rgba(0, 0, 0, 0.12)',
-                  cursor: 'pointer'
+                  boxShadow: '0 4px 16px rgba(37,211,102,0.3)',
+                  transition: 'all 0.2s ease',
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
+                onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+              >
+                <MessageCircle size={17} />
+                <span>WhatsApp</span>
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── 3. Quick Info Strip: Solo valores existentes en base de datos ── */}
+      <section style={{ background: '#0F172A', borderBottom: '1px solid #1E293B', padding: 0 }}>
+        <div className="container" style={{ padding: 0 }}>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))',
+          }} className="program-quick-metrics">
+            <div style={{ padding: '1.15rem 1.4rem', borderRight: '1px solid rgba(255,255,255,0.08)', background: 'rgba(52, 211, 153, 0.05)' }}>
+              <div style={{ fontSize: '0.7rem', fontWeight: 800, color: '#34D399', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '0.25rem' }}>
+                Versión Actual
+              </div>
+              <div style={{ fontSize: '0.98rem', fontWeight: 800, color: '#FFFFFF' }}>
+                {prog.edicionActiva?.nombre_edicion || 'Sin versión registrada'}
+              </div>
+              <div style={{ fontSize: '0.78rem', color: '#94A3B8', marginTop: '0.25rem' }}>
+                {prog.edicionActiva?.estado ? `Estado: ${prog.edicionActiva.estado}` : 'No registrada'}
+              </div>
+            </div>
+
+            <div style={{ padding: '1.15rem 1.4rem', borderRight: '1px solid rgba(255,255,255,0.08)', background: 'rgba(96, 165, 250, 0.05)' }}>
+              <div style={{ fontSize: '0.7rem', fontWeight: 800, color: '#60A5FA', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '0.25rem' }}>
+                Duración
+              </div>
+              <div style={{ fontSize: '0.98rem', fontWeight: 800, color: '#FFFFFF' }}>
+                {prog.duration || 'No especificada'}
+              </div>
+              <div style={{ fontSize: '0.78rem', color: '#94A3B8', marginTop: '0.25rem' }}>
+                {prog.edicionActiva?.fecha_inicio && prog.edicionActiva?.fecha_fin
+                  ? `${formatDate(prog.edicionActiva.fecha_inicio)} – ${formatDate(prog.edicionActiva.fecha_fin)}`
+                  : 'Periodo no registrado'}
+              </div>
+            </div>
+
+            <div style={{ padding: '1.15rem 1.4rem', borderRight: '1px solid rgba(255,255,255,0.08)', background: 'rgba(192, 132, 252, 0.05)' }}>
+              <div style={{ fontSize: '0.7rem', fontWeight: 800, color: '#C084FC', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '0.25rem' }}>
+                Horario de Clases
+              </div>
+              <div style={{ fontSize: '0.98rem', fontWeight: 800, color: '#FFFFFF' }}>
+                {prog.horario || 'No especificado'}
+              </div>
+              <div style={{ fontSize: '0.78rem', color: '#94A3B8', marginTop: '0.25rem' }}>
+                {prog.modality || 'Modalidad de impartición'}
+              </div>
+            </div>
+
+            <div style={{ padding: '1.15rem 1.4rem', background: 'rgba(251, 146, 60, 0.05)' }}>
+              <div style={{ fontSize: '0.7rem', fontWeight: 800, color: '#FB923C', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '0.25rem' }}>
+                Modalidad de Titulación
+              </div>
+              <div style={{ fontSize: '0.98rem', fontWeight: 800, color: '#FFFFFF' }}>
+                {prog.modalidad_titulacion || 'No especificada'}
+              </div>
+              <div style={{ fontSize: '0.78rem', color: '#94A3B8', marginTop: '0.25rem' }}>
+                {isMaster ? 'Posgrado Maestría' : 'Posgrado Diplomado'}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── 4. Navegación de Pestañas ── */}
+      <div className="container" style={{ paddingTop: '1.75rem' }}>
+        
+        {/* BARRA DE PESTAÑAS (Desktop) */}
+        <div className="program-modern-tabs-bar" style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(5, 1fr)',
+          gap: '0.65rem',
+          padding: '0.45rem',
+          background: '#FFFFFF',
+          borderRadius: '12px',
+          border: '1.5px solid #E2E8F0',
+          boxShadow: '0 4px 18px rgba(0,0,0,0.04)',
+          marginBottom: '2rem',
+        }}>
+          {tabConfigs.map((tab) => {
+            const isSelected = activeTab === tab.id;
+            const IconComponent = tab.icon;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setActiveTab(tab.id)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.55rem',
+                  padding: '0.85rem 0.75rem',
+                  borderRadius: '9px',
+                  border: isSelected ? `1.5px solid ${tab.color}` : '1.5px solid transparent',
+                  background: isSelected ? tab.gradient : 'transparent',
+                  color: isSelected ? '#FFFFFF' : '#334155',
+                  fontSize: '0.88rem',
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                  transition: 'all 0.18s cubic-bezier(0.16, 1, 0.3, 1)',
+                  boxShadow: isSelected ? `0 4px 14px ${tab.color}35` : 'none',
+                  whiteSpace: 'nowrap',
+                }}
+                onMouseEnter={(e) => {
+                  if (!isSelected) {
+                    e.currentTarget.style.background = tab.lightBg;
+                    e.currentTarget.style.color = tab.color;
+                    e.currentTarget.style.transform = 'translateY(-1px)';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!isSelected) {
+                    e.currentTarget.style.background = 'transparent';
+                    e.currentTarget.style.color = '#334155';
+                    e.currentTarget.style.transform = 'translateY(0)';
+                  }
                 }}
               >
-                <Download size={18} />
-                <span>Descargar PDF de Requisitos</span>
+                <div style={{
+                  width: '24px',
+                  height: '24px',
+                  borderRadius: '6px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  background: isSelected ? 'rgba(255,255,255,0.22)' : tab.lightBg,
+                  color: isSelected ? '#FFFFFF' : tab.color,
+                  flexShrink: 0,
+                }}>
+                  <IconComponent size={15} />
+                </div>
+                <span>{tab.label}</span>
+                {tab.tag && (
+                  <span style={{
+                    fontSize: '0.7rem',
+                    fontWeight: 700,
+                    padding: '0.12rem 0.45rem',
+                    borderRadius: '10px',
+                    background: isSelected ? 'rgba(255,255,255,0.25)' : '#F1F5F9',
+                    color: isSelected ? '#FFFFFF' : '#64748B',
+                    marginLeft: '0.2rem',
+                  }}>
+                    {tab.tag}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Barra Móvil */}
+        <div className="program-mobile-tabs-bar" style={{ display: 'none', marginBottom: '1.5rem' }}>
+          <select
+            value={activeTab}
+            onChange={(e) => setActiveTab(e.target.value)}
+            style={{
+              width: '100%',
+              padding: '0.85rem 1rem',
+              borderRadius: '8px',
+              border: '2px solid #059669',
+              background: '#FFFFFF',
+              color: '#0F172A',
+              fontWeight: 800,
+              fontSize: '0.95rem',
+            }}
+          >
+            {tabConfigs.map((t) => (
+              <option key={t.id} value={t.id}>
+                {t.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* ── LAYOUT PRINCIPAL: 2 Columnas ── */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'minmax(0, 1fr) 300px',
+          gap: '1.75rem',
+          alignItems: 'start',
+        }} className="program-content-grid">
+
+          {/* ── COLUMNA IZQUIERDA ── */}
+          <main style={{ minWidth: 0 }}>
+
+            {/* ════ TAB 1: PERFIL ACADÉMICO (Solo campos editables de la BD) ════ */}
+            {activeTab === 'perfil' && (
+              <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                
+                {/* 1.1 Descripción General del Programa */}
+                <article style={{
+                  background: '#FFFFFF',
+                  borderRadius: '12px',
+                  border: '1.5px solid #E2E8F0',
+                  padding: '1.75rem',
+                  boxShadow: '0 2px 10px rgba(0,0,0,0.03)',
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.25rem', paddingBottom: '0.85rem', borderBottom: '1px solid #E2E8F0' }}>
+                    <div style={{ width: '38px', height: '38px', borderRadius: '8px', background: '#EFF6FF', color: '#2563EB', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <Info size={20} />
+                    </div>
+                    <div>
+                      <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 800, color: '#0F172A' }}>
+                        Descripción General del Programa
+                      </h3>
+                      <p style={{ margin: '0.15rem 0 0 0', fontSize: '0.82rem', color: '#64748B' }}>
+                        Contenido institucional administrado para el programa
+                      </p>
+                    </div>
+                  </div>
+
+                  <div style={{
+                    background: '#F8FAFC',
+                    border: '1px solid #E2E8F0',
+                    borderRadius: '8px',
+                    padding: '1.35rem 1.5rem',
+                    fontSize: '0.96rem',
+                    color: '#334155',
+                    lineHeight: 1.75,
+                    whiteSpace: 'pre-line',
+                  }}>
+                    {prog.description || (
+                      <span style={{ color: '#94A3B8', fontStyle: 'italic' }}>
+                        No se ha registrado una descripción general en el panel de administración.
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Clasificación académica */}
+                  {(prog.mencion || prog.area) && (
+                    <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', marginTop: '1rem' }}>
+                      {prog.mencion && (
+                        <div style={{ background: '#F1F5F9', border: '1px solid #CBD5E1', borderRadius: '6px', padding: '0.45rem 0.85rem', fontSize: '0.84rem', color: '#0F172A', fontWeight: 700 }}>
+                          Mención Oficial: <span style={{ color: '#2563EB' }}>{prog.mencion}</span>
+                        </div>
+                      )}
+                      {prog.area && (
+                        <div style={{ background: '#F1F5F9', border: '1px solid #CBD5E1', borderRadius: '6px', padding: '0.45rem 0.85rem', fontSize: '0.84rem', color: '#0F172A', fontWeight: 700 }}>
+                          Área de Conocimiento: <span style={{ color: '#059669' }}>{prog.area}</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </article>
+
+                {/* 1.2 Perfil del Aspirante (Solo lo registrado en BD) */}
+                <article style={{
+                  background: '#FFFFFF',
+                  borderRadius: '12px',
+                  border: '1.5px solid #E2E8F0',
+                  padding: '1.75rem',
+                  boxShadow: '0 2px 10px rgba(0,0,0,0.03)',
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.25rem', paddingBottom: '0.85rem', borderBottom: '1px solid #E2E8F0' }}>
+                    <div style={{ width: '38px', height: '38px', borderRadius: '8px', background: '#ECFDF5', color: '#059669', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <Compass size={20} />
+                    </div>
+                    <div>
+                      <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 800, color: '#0F172A' }}>
+                        Perfil del Aspirante
+                      </h3>
+                      <p style={{ margin: '0.15rem 0 0 0', fontSize: '0.82rem', color: '#64748B' }}>
+                        Requisitos de formación previa y perfil de ingreso definido por administración
+                      </p>
+                    </div>
+                  </div>
+
+                  <div style={{
+                    background: '#F0FDF4',
+                    border: '1px solid #BBF7D0',
+                    borderRadius: '8px',
+                    padding: '1.35rem 1.5rem',
+                    fontSize: '0.96rem',
+                    color: '#166534',
+                    lineHeight: 1.75,
+                    whiteSpace: 'pre-line',
+                  }}>
+                    {prog.perfil_aspirante || (
+                      <span style={{ color: '#94A3B8', fontStyle: 'italic' }}>
+                        Perfil del aspirante no registrado en el panel de administración.
+                      </span>
+                    )}
+                  </div>
+                </article>
+
+                {/* 1.3 Perfil del Egresado (Solo lo registrado en BD) */}
+                <article style={{
+                  background: '#FFFFFF',
+                  borderRadius: '12px',
+                  border: '1.5px solid #E2E8F0',
+                  padding: '1.75rem',
+                  boxShadow: '0 2px 10px rgba(0,0,0,0.03)',
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.25rem', paddingBottom: '0.85rem', borderBottom: '1px solid #E2E8F0' }}>
+                    <div style={{ width: '38px', height: '38px', borderRadius: '8px', background: '#F5F3FF', color: '#7C3AED', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <GraduationCap size={20} />
+                    </div>
+                    <div>
+                      <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 800, color: '#0F172A' }}>
+                        Perfil del Egresado
+                      </h3>
+                      <p style={{ margin: '0.15rem 0 0 0', fontSize: '0.82rem', color: '#64748B' }}>
+                        Competencias y capacidades registradas para el egresado
+                      </p>
+                    </div>
+                  </div>
+
+                  <div style={{
+                    background: '#FAF5FF',
+                    border: '1px solid #E9D5FF',
+                    borderRadius: '8px',
+                    padding: '1.35rem 1.5rem',
+                    fontSize: '0.96rem',
+                    color: '#581C87',
+                    lineHeight: 1.75,
+                    whiteSpace: 'pre-line',
+                  }}>
+                    {prog.perfil_egreso || (
+                      <span style={{ color: '#94A3B8', fontStyle: 'italic' }}>
+                        Perfil del egresado no registrado en el panel de administración.
+                      </span>
+                    )}
+                  </div>
+                </article>
+
+                {/* 1.4 Modalidad de Titulación y Resolución PDF */}
+                {(prog.modalidad_titulacion || prog.enlace_pdf_programa) && (
+                  <article style={{
+                    background: '#FFFFFF',
+                    borderRadius: '12px',
+                    border: '1.5px solid #E2E8F0',
+                    padding: '1.5rem',
+                    boxShadow: '0 2px 10px rgba(0,0,0,0.03)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    flexWrap: 'wrap',
+                    gap: '1rem',
+                  }}>
+                    <div>
+                      <h4 style={{ margin: '0 0 0.35rem 0', fontSize: '1.05rem', fontWeight: 800, color: '#0F172A' }}>
+                        Modalidad de Titulación
+                      </h4>
+                      <p style={{ margin: 0, fontSize: '0.88rem', color: '#475569' }}>
+                        {prog.modalidad_titulacion || 'Modalidad de titulación según reglamento de posgrado.'}
+                      </p>
+                    </div>
+
+                    {directDownloadGuia && (
+                      <a
+                        href={directDownloadGuia}
+                        target="_blank"
+                        rel="noreferrer"
+                        style={{
+                          background: '#F1F5F9',
+                          border: '1.5px solid #CBD5E1',
+                          color: '#0F172A',
+                          borderRadius: '6px',
+                          padding: '0.65rem 1.15rem',
+                          fontSize: '0.85rem',
+                          fontWeight: 800,
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '0.45rem',
+                          textDecoration: 'none',
+                        }}
+                      >
+                        <ExternalLink size={15} color="#2563EB" />
+                        <span>Ver Documento / Resolución PDF</span>
+                      </a>
+                    )}
+                  </article>
+                )}
+
+              </div>
+            )}
+
+            {/* ════ TAB 2: MATERIAS Y MALLA CURRICULAR (Solo de la BD) ════ */}
+            {activeTab === 'materias' && (
+              <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                
+                <div style={{
+                  background: 'linear-gradient(135deg, #065F46 0%, #10B981 100%)',
+                  borderRadius: '12px',
+                  padding: '1.6rem 1.8rem',
+                  color: '#FFFFFF',
+                  boxShadow: '0 6px 20px rgba(6,95,70,0.25)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  flexWrap: 'wrap',
+                  gap: '1rem',
+                }}>
+                  <div>
+                    <h2 style={{ fontSize: '1.35rem', fontWeight: 900, margin: '0 0 0.35rem 0', color: '#FFFFFF' }}>
+                      Plan de Estudios & Estructura Curricular
+                    </h2>
+                    <p style={{ fontSize: '0.88rem', margin: 0, color: '#D1FAE5' }}>
+                      Materias registradas en el módulo de Mallas Curriculares de la base de datos
+                    </p>
+                  </div>
+
+                </div>
+
+                {progCurriculum.length === 0 ? (
+                  <div style={{
+                    background: '#FFFFFF',
+                    border: '1.5px dashed #CBD5E1',
+                    borderRadius: '12px',
+                    padding: '3rem 2rem',
+                    textAlign: 'center',
+                    color: '#64748B',
+                  }}>
+                    <BookOpen size={44} style={{ color: '#059669', marginBottom: '0.85rem' }} />
+                    <h3 style={{ margin: '0 0 0.5rem 0', color: '#0F172A', fontWeight: 800 }}>
+                      Sin Malla Curricular Registrada
+                    </h3>
+                    <p style={{ margin: 0, fontSize: '0.92rem', color: '#64748B' }}>
+                      No se han registrado materias ni módulos para este programa en el módulo de mallas curriculares del panel de administración.
+                    </p>
+                  </div>
+                ) : (
+                  <div>
+                    {/* Selector de Semestres / Módulos */}
+                    {progCurriculum.length > 1 && (
+                      <div style={{
+                        display: 'flex',
+                        gap: '0.5rem',
+                        overflowX: 'auto',
+                        paddingBottom: '0.65rem',
+                        marginBottom: '1.25rem',
+                      }}>
+                        {progCurriculum.map((sem, sIdx) => {
+                          const isSemActive = activeSemesterTab === sIdx;
+                          return (
+                            <button
+                              key={sIdx}
+                              type="button"
+                              onClick={() => setActiveSemesterTab(sIdx)}
+                              style={{
+                                background: isSemActive ? '#059669' : '#FFFFFF',
+                                color: isSemActive ? '#FFFFFF' : '#334155',
+                                border: isSemActive ? '1.5px solid #059669' : '1.5px solid #E2E8F0',
+                                borderRadius: '8px',
+                                padding: '0.65rem 1.15rem',
+                                fontWeight: 800,
+                                fontSize: '0.88rem',
+                                cursor: 'pointer',
+                                whiteSpace: 'nowrap',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '0.5rem',
+                                boxShadow: isSemActive ? '0 4px 12px rgba(5,150,105,0.25)' : 'none',
+                                transition: 'all 0.15s ease',
+                              }}
+                            >
+                              <span>{sem.semester}</span>
+                              <span style={{
+                                fontSize: '0.74rem',
+                                padding: '0.1rem 0.45rem',
+                                borderRadius: '10px',
+                                background: isSemActive ? 'rgba(255,255,255,0.25)' : '#F1F5F9',
+                                color: isSemActive ? '#FFFFFF' : '#64748B',
+                              }}>
+                                {sem.modules?.length || 0}
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+
+                    {/* Lista de Materias */}
+                    {progCurriculum[activeSemesterTab] && (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+                        {progCurriculum[activeSemesterTab].modules.map((materia, mIdx) => (
+                          <article
+                            key={mIdx}
+                            style={{
+                              background: '#FFFFFF',
+                              border: '1.5px solid #E2E8F0',
+                              borderRadius: '10px',
+                              padding: '1.25rem 1.5rem',
+                              boxShadow: '0 2px 6px rgba(0,0,0,0.02)',
+                            }}
+                          >
+                            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem', marginBottom: '0.5rem' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', flexWrap: 'wrap' }}>
+                                <span style={{
+                                  fontFamily: 'monospace',
+                                  fontSize: '0.78rem',
+                                  fontWeight: 800,
+                                  color: '#059669',
+                                  background: '#ECFDF5',
+                                  border: '1px solid #A7F3D0',
+                                  padding: '0.2rem 0.55rem',
+                                  borderRadius: '4px',
+                                }}>
+                                  {materia.code}
+                                </span>
+                                <h4 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 800, color: '#0F172A' }}>
+                                  {materia.name}
+                                </h4>
+                              </div>
+
+                              <div style={{ display: 'flex', gap: '0.45rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                                {materia.credits != null && (
+                                  <span style={{ fontSize: '0.76rem', fontWeight: 700, color: '#1E293B', background: '#F1F5F9', padding: '0.2rem 0.55rem', borderRadius: '4px' }}>
+                                    {materia.credits} Créditos
+                                  </span>
+                                )}
+                                {materia.hours != null && (
+                                  <span style={{ fontSize: '0.76rem', fontWeight: 600, color: '#059669', background: '#ECFDF5', padding: '0.2rem 0.55rem', borderRadius: '4px' }}>
+                                    {materia.hours} horas
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+
+                            {materia.desc && (
+                              <p style={{ margin: '0.45rem 0', fontSize: '0.88rem', color: '#475569', lineHeight: 1.55 }}>
+                                {materia.desc}
+                              </p>
+                            )}
+                          </article>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+              </div>
+            )}
+
+            {/* ════ TAB 3: DOCENTES DEL PROGRAMA ════ */}
+            {activeTab === 'docentes' && (
+              <section className="program-faculty animate-fade-in" aria-labelledby="program-faculty-title">
+                <header className="program-faculty__header">
+                  <div>
+                    <span className="program-faculty__eyebrow">Equipo académico</span>
+                    <h2 id="program-faculty-title">Docentes del programa</h2>
+                    <p>Conoce a las personas que acompañan la formación académica.</p>
+                  </div>
+                  <span className="program-faculty__count">
+                    <Users size={16} aria-hidden="true" />
+                    {docentesList.length} {docentesList.length === 1 ? 'docente' : 'docentes'}
+                  </span>
+                </header>
+
+                {docentesList.length === 0 ? (
+                  <div className="program-faculty__empty">
+                    <span className="program-faculty__empty-icon"><Users size={25} aria-hidden="true" /></span>
+                    <h3>Aún no hay docentes para mostrar</h3>
+                    <p>La información del equipo académico aparecerá aquí cuando esté disponible.</p>
+                  </div>
+                ) : (
+                  <div className="program-faculty__grid">
+                    {docentesList.map((doc, idx) => {
+                      const docId = doc.id ?? idx;
+                      const palette = programFacultyPalettes[idx % programFacultyPalettes.length];
+                      return (
+                        <article
+                          key={docId}
+                          className="program-faculty-card"
+                          style={{ '--faculty-accent': palette.accent, '--faculty-soft': palette.soft }}
+                        >
+                          <div className="program-faculty-card__portrait">
+                            {doc.avatar ? (
+                              <img src={doc.avatar} alt={`Fotografía de ${doc.name}`} loading="lazy" />
+                            ) : (
+                              <span aria-hidden="true">{initialsFromName(doc.name) || 'D'}</span>
+                            )}
+                          </div>
+                          <h3 className="program-faculty-card__name">{doc.name}</h3>
+                          {doc.degree && <span className="program-faculty-card__degree">{doc.degree}</span>}
+                          {doc.bio && <p className="program-faculty-card__bio">{doc.bio}</p>}
+
+                          {doc.bibliographyUrl && (
+                            <a className="program-faculty-card__link" href={doc.bibliographyUrl} target="_blank" rel="noreferrer">
+                              <span>Publicaciones</span>
+                              <ExternalLink size={14} aria-hidden="true" />
+                            </a>
+                          )}
+                        </article>
+                      );
+                    })}
+                  </div>
+                )}
+
+              </section>
+            )}
+
+            {/* ════ TAB 4: REQUISITOS Y ADMISIÓN (Solo de la BD, sin estáticos) ════ */}
+            {activeTab === 'requisitos' && (
+              <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                
+                <div style={{
+                  background: 'linear-gradient(135deg, #92400E 0%, #F59E0B 100%)',
+                  borderRadius: '12px',
+                  padding: '1.6rem 1.8rem',
+                  color: '#FFFFFF',
+                  boxShadow: '0 6px 20px rgba(146,64,14,0.25)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  flexWrap: 'wrap',
+                  gap: '1rem',
+                }}>
+                  <div style={{ maxWidth: '580px' }}>
+                    <h2 style={{ fontSize: '1.35rem', fontWeight: 900, margin: '0 0 0.35rem 0', color: '#FFFFFF' }}>
+                      Requisitos de Admisión
+                    </h2>
+                    <p style={{ fontSize: '0.88rem', margin: 0, color: '#FEF3C7', lineHeight: 1.5 }}>
+                      Bases y requisitos de postulación registrados por el administrador
+                    </p>
+                  </div>
+
+                  {directDownloadConvocatoria && (
+                    <a
+                      href={directDownloadConvocatoria}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      download
+                      style={{
+                        background: '#FFFFFF',
+                        color: '#92400E',
+                        borderRadius: '8px',
+                        padding: '0.75rem 1.35rem',
+                        fontSize: '0.9rem',
+                        fontWeight: 800,
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.5rem',
+                        textDecoration: 'none',
+                      }}
+                    >
+                      <Download size={16} />
+                      <span>Descargar Convocatoria (PDF)</span>
+                    </a>
+                  )}
+                </div>
+
+                {/* Requisitos Específicos de la BD */}
+                <article style={{
+                  background: '#FFFFFF',
+                  borderRadius: '12px',
+                  border: '1.5px solid #E2E8F0',
+                  padding: '1.75rem',
+                  boxShadow: '0 2px 10px rgba(0,0,0,0.03)',
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', marginBottom: '1rem' }}>
+                    <FileText size={20} color="#D97706" />
+                    <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 800, color: '#0F172A' }}>
+                      Requisitos Registrados en Administración
+                    </h3>
+                  </div>
+
+                  {prog.requisitos_admision ? (
+                    <div style={{
+                      background: '#FFFBEB',
+                      border: '1px solid #FDE68A',
+                      borderRadius: '8px',
+                      padding: '1.25rem 1.4rem',
+                      fontSize: '0.94rem',
+                      color: '#92400E',
+                      lineHeight: 1.75,
+                      whiteSpace: 'pre-line',
+                    }}>
+                      {prog.requisitos_admision}
+                    </div>
+                  ) : (
+                    <div style={{
+                      background: '#F8FAFC',
+                      border: '1px solid #E2E8F0',
+                      borderRadius: '8px',
+                      padding: '1.5rem',
+                      color: '#64748B',
+                      textAlign: 'center',
+                    }}>
+                      No se han registrado requisitos de admisión para esta edición en el panel de administración.
+                    </div>
+                  )}
+
+                  {/* Acciones de postulación */}
+                  <div style={{ display: 'flex', gap: '0.85rem', flexWrap: 'wrap', marginTop: '1.5rem', paddingTop: '1.25rem', borderTop: '1px solid #E2E8F0' }}>
+                    {directInscripcionUrl && (
+                      <a
+                        href={directInscripcionUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="btn btn-primary"
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}
+                      >
+                        <FileCheck2 size={16} />
+                        <span>Abrir Formulario de Postulación</span>
+                      </a>
+                    )}
+                    {directDownloadConvocatoria && (
+                      <a
+                        href={directDownloadConvocatoria}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="btn btn-secondary"
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}
+                      >
+                        <Download size={16} />
+                        <span>Descargar Convocatoria Oficial (PDF)</span>
+                      </a>
+                    )}
+                  </div>
+                </article>
+
+              </div>
+            )}
+
+            {/* ════ TAB 5: FECHAS Y HORARIOS (Solo de la BD, sin estáticos) ════ */}
+            {activeTab === 'fechas' && (
+              <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                
+                <div style={{
+                  background: 'linear-gradient(135deg, #991B1B 0%, #EF4444 100%)',
+                  borderRadius: '12px',
+                  padding: '1.6rem 1.8rem',
+                  color: '#FFFFFF',
+                  boxShadow: '0 6px 20px rgba(153,27,27,0.25)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  flexWrap: 'wrap',
+                  gap: '1rem',
+                }}>
+                  <div>
+                    <h2 style={{ fontSize: '1.35rem', fontWeight: 900, margin: '0 0 0.35rem 0', color: '#FFFFFF' }}>
+                      Ediciones, Fechas y Horarios
+                    </h2>
+                    <p style={{ fontSize: '0.88rem', margin: 0, color: '#FEE2E2' }}>
+                      Periodos académicos y turnos registrados en el panel de administración
+                    </p>
+                  </div>
+
+                  <span style={{ fontSize: '0.82rem', color: '#FFFFFF', background: 'rgba(255,255,255,0.2)', border: '1px solid rgba(255,255,255,0.3)', padding: '0.35rem 0.75rem', borderRadius: '6px', fontWeight: 700 }}>
+                    {totalEdicionesCount} {totalEdicionesCount === 1 ? 'Edición Registrada' : 'Ediciones Registradas'}
+                  </span>
+                </div>
+
+                {/* Ediciones Registradas */}
+                <article style={{
+                  background: '#FFFFFF',
+                  borderRadius: '12px',
+                  border: '1.5px solid #E2E8F0',
+                  padding: '1.75rem',
+                  boxShadow: '0 2px 10px rgba(0,0,0,0.03)',
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', marginBottom: '1.25rem', paddingBottom: '0.85rem', borderBottom: '1px solid #E2E8F0' }}>
+                    <CalendarDays size={22} color="#DC2626" />
+                    <div>
+                      <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 800, color: '#0F172A' }}>
+                        Versiones del Programa en Base de Datos
+                      </h3>
+                      <p style={{ margin: '0.15rem 0 0 0', fontSize: '0.82rem', color: '#64748B' }}>
+                        Fechas y estados administrados en el sistema
+                      </p>
+                    </div>
+                  </div>
+
+                  {prog.ediciones && prog.ediciones.length > 0 ? (
+                    <div style={{ display: 'grid', gap: '1rem' }}>
+                      {prog.ediciones.map((edicion, eIdx) => {
+                        const isCurrent = edicion.id_edicion === prog.edicionActiva?.id_edicion;
+                        const estadoColor = edicion.estado === 'En Curso' ? '#059669' :
+                                           edicion.estado === 'Abierta' ? '#2563EB' :
+                                           edicion.estado === 'En Proceso' ? '#D97706' : '#64748B';
+                        const estadoBg = edicion.estado === 'En Curso' ? '#ECFDF5' :
+                                         edicion.estado === 'Abierta' ? '#EFF6FF' :
+                                         edicion.estado === 'En Proceso' ? '#FFFBEB' : '#F1F5F9';
+
+                        return (
+                          <div
+                            key={edicion.id_edicion || eIdx}
+                            style={{
+                              background: isCurrent ? '#F8FAFC' : '#FFFFFF',
+                              border: isCurrent ? '2px solid #CBD5E1' : '1px solid #E2E8F0',
+                              borderRadius: '10px',
+                              padding: '1.35rem',
+                              boxShadow: isCurrent ? '0 4px 14px rgba(0,0,0,0.04)' : 'none',
+                            }}
+                          >
+                            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem', marginBottom: '0.85rem' }}>
+                              <div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                                  <h4 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 800, color: '#0F172A' }}>
+                                    {edicion.nombre_edicion || `Edición ${eIdx + 1}`}
+                                  </h4>
+                                  <span style={{ fontSize: '0.74rem', fontWeight: 800, color: estadoColor, background: estadoBg, padding: '0.2rem 0.6rem', borderRadius: '4px' }}>
+                                    {edicion.estado || 'Activa'}
+                                  </span>
+                                  {isCurrent && (
+                                    <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#2563EB', background: '#EFF6FF', padding: '0.15rem 0.5rem', borderRadius: '4px' }}>
+                                      Edición Actual
+                                    </span>
+                                  )}
+                                </div>
+
+                                <div style={{ fontSize: '0.82rem', color: '#64748B', marginTop: '0.35rem' }}>
+                                  {edicion.fecha_inicio && edicion.fecha_fin ? (
+                                    <span>Periodo: <strong>{formatDate(edicion.fecha_inicio)}</strong> al <strong>{formatDate(edicion.fecha_fin)}</strong></span>
+                                  ) : (
+                                    <span>Periodo de fechas no especificado</span>
+                                  )}
+                                </div>
+                              </div>
+
+                              {edicion.duracion && (
+                                <div style={{ background: '#F1F5F9', padding: '0.35rem 0.75rem', borderRadius: '6px', fontSize: '0.8rem', fontWeight: 700, color: '#334155' }}>
+                                  <Clock size={13} style={{ display: 'inline', marginRight: '0.3rem', verticalAlign: '-1px' }} />
+                                  {edicion.duracion}
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Horario registrado */}
+                            {edicion.horario && (
+                              <div style={{ background: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: '6px', padding: '0.65rem 0.85rem', fontSize: '0.85rem', color: '#1E293B', marginBottom: '0.75rem' }}>
+                                <strong>Horario registrado:</strong> {edicion.horario}
+                              </div>
+                            )}
+
+                            {/* Descripción de la edición */}
+                            {edicion.descripcion && (
+                              <p style={{ margin: '0 0 0.85rem 0', fontSize: '0.85rem', color: '#475569', lineHeight: 1.55 }}>
+                                {edicion.descripcion}
+                              </p>
+                            )}
+
+                            {/* Acciones si tiene formulario o convocatoria */}
+                            {(edicion.convocatoria || edicion.formulario) && (
+                              <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap', paddingTop: '0.65rem', borderTop: '1px dashed #E2E8F0' }}>
+                                {edicion.convocatoria && (
+                                  <a
+                                    href={getDirectDownloadLink(edicion.convocatoria)}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.78rem', color: '#059669', fontWeight: 700, textDecoration: 'none' }}
+                                  >
+                                    <Download size={13} />
+                                    <span>Descargar Convocatoria de esta Edición</span>
+                                  </a>
+                                )}
+                                {edicion.formulario && (
+                                  <a
+                                    href={edicion.formulario}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.78rem', color: '#2563EB', fontWeight: 700, textDecoration: 'none' }}
+                                  >
+                                    <ExternalLink size={13} />
+                                    <span>Formulario de Inscripción</span>
+                                  </a>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div style={{ background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '8px', padding: '1.5rem', color: '#64748B', textAlign: 'center' }}>
+                      No se han registrado ediciones ni cronogramas para este programa en el panel de administración.
+                    </div>
+                  )}
+                </article>
+
+              </div>
+            )}
+
+          </main>
+
+          {/* ── COLUMNA DERECHA: AFICHE Y DATOS DE BD ── */}
+          <aside style={{
+            position: 'sticky',
+            top: '140px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '1.25rem',
+          }} className="program-detail-aside">
+
+            {/* Afiche Oficial */}
+            <div style={{
+              borderRadius: '12px',
+              overflow: 'hidden',
+              background: '#FFFFFF',
+              border: '1.5px solid #E2E8F0',
+              boxShadow: '0 6px 20px rgba(0,0,0,0.06)',
+            }}>
+              {programPostUrl ? (
+                /\.pdf(?:$|[?#])/i.test(programPostUrl) ? (
+                  <div style={{ padding: '2rem 1rem', textAlign: 'center' }}>
+                    <FileText size={40} color="#059669" style={{ margin: '0 auto 0.75rem' }} />
+                    <div style={{ fontWeight: 800, fontSize: '0.92rem', color: '#0F172A', marginBottom: '0.5rem' }}>
+                      Folleto Oficial (PDF)
+                    </div>
+                    <a
+                      href={programPostUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="btn btn-secondary btn-sm"
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
+                    >
+                      <Download size={14} />
+                      <span>Abrir Folleto Oficial</span>
+                    </a>
+                  </div>
+                ) : (
+                  <img
+                    src={programPostUrl}
+                    alt={prog.title}
+                    style={{
+                      width: '100%',
+                      height: 'auto',
+                      display: 'block',
+                      objectFit: 'contain',
+                    }}
+                  />
+                )
+              ) : (
+                <div style={{ padding: '2.5rem 1rem', textAlign: 'center', color: '#94A3B8' }}>
+                  <FileText size={36} style={{ margin: '0 auto 0.5rem', opacity: 0.6 }} />
+                  <div style={{ fontSize: '0.85rem', fontWeight: 600 }}>Afiche no adjuntado en administración</div>
+                </div>
+              )}
+            </div>
+
+            {/* Ficha Resumen de la Base de Datos */}
+            <div style={{
+              background: '#FFFFFF',
+              border: '1.5px solid #E2E8F0',
+              borderRadius: '12px',
+              padding: '1.25rem',
+              boxShadow: '0 4px 14px rgba(0,0,0,0.03)',
+            }}>
+              <div style={{ fontSize: '0.72rem', fontWeight: 800, color: '#059669', textTransform: 'uppercase', letterSpacing: '0.06em', borderBottom: '1px solid #E2E8F0', paddingBottom: '0.5rem', marginBottom: '0.75rem' }}>
+                Datos en Base de Datos
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.82rem', gap: '0.5rem' }}>
+                  <span style={{ color: '#64748B', fontWeight: 600 }}>Tipo</span>
+                  <span style={{ fontWeight: 800, color: '#2563EB', textAlign: 'right' }}>{prog.type}</span>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.82rem', gap: '0.5rem' }}>
+                  <span style={{ color: '#64748B', fontWeight: 600 }}>Versión</span>
+                  <span style={{ fontWeight: 800, color: '#059669', textAlign: 'right' }}>
+                    {prog.edicionActiva?.nombre_edicion || 'No registrada'}
+                  </span>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.82rem', gap: '0.5rem' }}>
+                  <span style={{ color: '#64748B', fontWeight: 600 }}>Duración</span>
+                  <span style={{ fontWeight: 800, color: '#D97706', textAlign: 'right' }}>
+                    {prog.duration || 'No especificada'}
+                  </span>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.82rem', gap: '0.5rem' }}>
+                  <span style={{ color: '#64748B', fontWeight: 600 }}>Estado</span>
+                  <span style={{ fontWeight: 800, color: '#059669', textAlign: 'right' }}>
+                    {prog.edicionActiva?.estado || (prog.activo ? 'Activo' : 'Inactivo')}
+                  </span>
+                </div>
+              </div>
+
+              {/* Botón de Postulación en el Sidebar */}
+              {directInscripcionUrl && (
+                <div style={{ marginTop: '1.15rem', paddingTop: '0.85rem', borderTop: '1px solid #F1F5F9' }}>
+                  <a
+                    href={directInscripcionUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    style={{
+                      width: '100%',
+                      background: 'linear-gradient(135deg, #059669 0%, #10B981 100%)',
+                      color: '#FFFFFF',
+                      fontWeight: 800,
+                      fontSize: '0.88rem',
+                      padding: '0.75rem 1rem',
+                      borderRadius: '8px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '0.45rem',
+                      textDecoration: 'none',
+                      boxShadow: '0 4px 12px rgba(5,150,105,0.3)',
+                      boxSizing: 'border-box',
+                    }}
+                  >
+                    <FileCheck2 size={16} />
+                    <span>Llenar Formulario Web</span>
+                  </a>
+                </div>
+              )}
+            </div>
+
+            {/* Tarjeta de Contacto */}
+            <div style={{
+              background: '#0F172A',
+              color: '#FFFFFF',
+              borderRadius: '12px',
+              padding: '1.25rem',
+              boxShadow: '0 4px 16px rgba(0,0,0,0.15)',
+            }}>
+              <div style={{ fontSize: '0.9rem', fontWeight: 800, marginBottom: '0.35rem' }}>
+                Atención al Postulante
+              </div>
+              <p style={{ margin: '0 0 0.85rem 0', fontSize: '0.78rem', color: '#94A3B8', lineHeight: 1.45 }}>
+                Consultas sobre requisitos y postulaciones de la Carrera de Estadística UMSA.
+              </p>
+              <a
+                href={`https://wa.me/59176543210?text=${whatsappMessage}`}
+                target="_blank"
+                rel="noreferrer"
+                style={{
+                  width: '100%',
+                  background: '#25D366',
+                  color: '#FFFFFF',
+                  fontWeight: 800,
+                  fontSize: '0.84rem',
+                  padding: '0.65rem 0.9rem',
+                  borderRadius: '6px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.45rem',
+                  textDecoration: 'none',
+                  boxSizing: 'border-box',
+                }}
+              >
+                <MessageCircle size={16} />
+                <span>Escribir al WhatsApp</span>
               </a>
             </div>
 
-            {/* Checklist Interactivo y Fácil de Usar para Postulantes */}
-            <div style={cleanPanelStyle}>
-              <div style={sectionHeaderStyle('#DCF5DC', '#006400')}>
-                <div style={iconBadgeStyle('#DCF5DC', '#006400')}>
-                  <FileCheck2 size={22} />
-                </div>
-                <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem' }}>
-                  <div>
-                    <h3 style={sectionTitleStyle}>Verificador Interactivo de Documentación</h3>
-                    <p style={sectionSubtitleStyle}>Marca los documentos que tienes listos para calcular tu avance de postulación</p>
-                  </div>
-                  
-                  <div style={{
-                    background: progressPercent === 100 ? '#DCF5DC' : '#FFF5DC',
-                    border: `1.5px solid ${progressPercent === 100 ? '#98DF98' : '#E6D2A8'}`,
-                    padding: '0.4rem 0.85rem',
-                    borderRadius: '6px',
-                    fontSize: '0.825rem',
-                    fontWeight: 800,
-                    color: progressPercent === 100 ? '#006400' : '#B8860B'
-                  }}>
-                    {totalChecked} de {totalDocs} documentos listos ({progressPercent}%)
-                  </div>
-                </div>
-              </div>
+          </aside>
 
-              {/* Barra de progreso interactiva (#006400 / #32CD32) */}
-              <div style={{ width: '100%', height: '8px', background: '#DCE1E6', borderRadius: '99px', overflow: 'hidden', marginBottom: '1.5rem' }}>
-                <div style={{
-                  width: `${progressPercent}%`,
-                  height: '100%',
-                  background: progressPercent === 100 ? 'linear-gradient(90deg, #32CD32, #006400)' : 'linear-gradient(90deg, #4682B4, #006400)',
-                  transition: 'width 0.3s ease'
-                }} />
-              </div>
+        </div>{/* /program-content-grid */}
 
-              {/* Lista interactiva de checkboxes */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                {[
-                  { id: 'doc1', title: 'Fotocopia legalizada del Título en Provisión Nacional (Grado Licenciatura)' },
-                  { id: 'doc2', title: 'Fotocopia legalizada del Diploma Académico de Licenciatura' },
-                  { id: 'doc3', title: 'Certificado de Nacimiento original y Cédula de Identidad vigente' },
-                  { id: 'doc4', title: 'Currículum Vitae documentado y foliado según reglamento' },
-                  { id: 'doc5', title: 'Carta de motivación y solicitud de postulación dirigida al Coordinador' },
-                  { id: 'doc6', title: 'Formulario oficial de preinscripción digital completado' }
-                ].map((item) => {
-                  const isChecked = checkedDocs[item.id];
-                  return (
-                    <div
-                      key={item.id}
-                      onClick={() => toggleCheckDoc(item.id)}
-                      style={{
-                        background: isChecked ? '#DCF5DC' : '#FFFFFF',
-                        border: isChecked ? '1.5px solid #006400' : '1.5px solid #DCE1E6',
-                        borderRadius: '6px',
-                        padding: '0.9rem 1.15rem',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.85rem',
-                        cursor: 'pointer',
-                        transition: 'all 0.15s ease'
-                      }}
-                    >
-                      <div style={{ color: isChecked ? '#006400' : '#C8CDD2', display: 'flex', alignItems: 'center' }}>
-                        {isChecked ? <CheckSquare size={20} /> : <Square size={20} />}
-                      </div>
-                      <span style={{
-                        fontSize: '0.925rem',
-                        color: isChecked ? '#006400' : '#373A40',
-                        fontWeight: isChecked ? 700 : 500
-                      }}>
-                        {item.title}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
+      </div>{/* /container */}
 
-              {/* Steps / Pasos de Postulación */}
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-                gap: '1rem',
-                borderTop: '1px solid #DCE1E6',
-                paddingTop: '1.5rem',
-                marginTop: '1.5rem'
-              }}>
-                <div style={{ background: '#FFFFFF', border: '1.5px solid #DCE1E6', borderRadius: '6px', padding: '1rem' }}>
-                  <div style={{ fontSize: '0.72rem', fontWeight: 800, color: '#4682B4', textTransform: 'uppercase', marginBottom: '0.3rem' }}>
-                    Paso 1
-                  </div>
-                  <div style={{ fontWeight: 800, fontSize: '0.92rem', color: '#373A40', marginBottom: '0.2rem' }}>
-                    Preinscripción Digital
-                  </div>
-                  <div style={{ fontSize: '0.8rem', color: '#646973' }}>
-                    Completar el formulario en línea y cargar comprobante digital
-                  </div>
-                </div>
-
-                <div style={{ background: '#FFFFFF', border: '1.5px solid #DCE1E6', borderRadius: '6px', padding: '1rem' }}>
-                  <div style={{ fontSize: '0.72rem', fontWeight: 800, color: '#006400', textTransform: 'uppercase', marginBottom: '0.3rem' }}>
-                    Paso 2
-                  </div>
-                  <div style={{ fontWeight: 800, fontSize: '0.92rem', color: '#373A40', marginBottom: '0.2rem' }}>
-                    Entrega de Carpeta
-                  </div>
-                  <div style={{ fontSize: '0.8rem', color: '#646973' }}>
-                    Presentación de títulos legalizados y foliados en Posgrado
-                  </div>
-                </div>
-
-                <div style={{ background: '#FFFFFF', border: '1.5px solid #DCE1E6', borderRadius: '6px', padding: '1rem' }}>
-                  <div style={{ fontSize: '0.72rem', fontWeight: 800, color: '#4682B4', textTransform: 'uppercase', marginBottom: '0.3rem' }}>
-                    Paso 3
-                  </div>
-                  <div style={{ fontWeight: 800, fontSize: '0.92rem', color: '#373A40', marginBottom: '0.2rem' }}>
-                    Evaluación de Méritos
-                  </div>
-                  <div style={{ fontSize: '0.8rem', color: '#646973' }}>
-                    Revisión por la Comisión Académica Evaluadora
-                  </div>
-                </div>
-
-                <div style={{ background: '#FFFFFF', border: '1.5px solid #DCE1E6', borderRadius: '6px', padding: '1rem' }}>
-                  <div style={{ fontSize: '0.72rem', fontWeight: 800, color: '#006400', textTransform: 'uppercase', marginBottom: '0.3rem' }}>
-                    Paso 4
-                  </div>
-                  <div style={{ fontWeight: 800, fontSize: '0.92rem', color: '#373A40', marginBottom: '0.2rem' }}>
-                    Admisión y Matrícula
-                  </div>
-                  <div style={{ fontSize: '0.8rem', color: '#646973' }}>
-                    Generación de código CPT y habilitación de campus virtual
-                  </div>
-                </div>
-              </div>
-            </div>
-
-          </div>
-        )}
-
-
-        {/* ── TAB 6: FECHAS & HORARIOS (Azul Acero #4682B4 & #E6EBF5) ── */}
-        {activeTab === 'fechas' && (
-          <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '1.75rem' }}>
-            <div style={cleanPanelStyle}>
-              <div style={sectionHeaderStyle('#E6EBF5', '#4682B4')}>
-                <div style={iconBadgeStyle('#E6EBF5', '#4682B4')}>
-                  <CalendarDays size={22} />
-                </div>
-                <div>
-                  <h3 style={sectionTitleStyle}>Cronograma Académico & Horarios de Clases</h3>
-                  <p style={sectionSubtitleStyle}>Calendario de convocatoria, etapas del proceso y turnos de docencia</p>
-                </div>
-              </div>
-
-              {/* Grid de fechas con iconos */}
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-                gap: '1.25rem',
-                marginBottom: '2rem'
-              }}>
-                <div style={dateCardStyle}>
-                  <div style={dateBadgeStyle('#DCF5DC', '#006400')}>Paso 1</div>
-                  <div style={dateTitleStyle}>Publicación de Bases</div>
-                  <div style={dateValueStyle}>Gestión 2026</div>
-                  <div style={dateDescStyle}>Apertura de inscripciones y descarga de guías académicas</div>
-                </div>
-
-                <div style={dateCardStyle}>
-                  <div style={dateBadgeStyle('#FFF5DC', '#B8860B')}>Paso 2</div>
-                  <div style={dateTitleStyle}>Recepción de Carpetas</div>
-                  <div style={dateValueStyle}>Ventanilla de Posgrado</div>
-                  <div style={dateDescStyle}>Entrega de expedientes y títulos legalizados</div>
-                </div>
-
-                <div style={dateCardStyle}>
-                  <div style={dateBadgeStyle('#E6EBF5', '#4682B4')}>Paso 3</div>
-                  <div style={dateTitleStyle}>Evaluación de Méritos</div>
-                  <div style={dateValueStyle}>Comité de Posgrado</div>
-                  <div style={dateDescStyle}>Calificación curricular y publicación de listas de admitidos</div>
-                </div>
-
-                <div style={dateCardStyle}>
-                  <div style={dateBadgeStyle('#DCF5DC', '#006400')}>Paso 4</div>
-                  <div style={dateTitleStyle}>Inicio de Clases</div>
-                  <div style={dateValueStyle}>Semestre I 2026</div>
-                  <div style={dateDescStyle}>Sesiones síncronas programadas e inducción a la plataforma</div>
-                </div>
-              </div>
-
-              {/* Horarios y Turnos */}
-              <div style={{ background: '#EBE6DA', padding: '1.5rem', borderRadius: '8px', border: '1px solid #DCE1E6' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.75rem' }}>
-                  <Clock size={18} color="#006400" />
-                  <h4 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 800, color: '#373A40' }}>
-                    Horario de Clases y Turnos
-                  </h4>
-                </div>
-                <div style={{ fontSize: '0.92rem', color: '#646973', lineHeight: 1.85 }}>
-                  <div style={{ marginBottom: '0.5rem' }}><strong>Días de Clases:</strong> Lunes a Jueves, Turno Noche de 19:00 a 22:00 h</div>
-                  <div style={{ marginBottom: '0.5rem' }}><strong>Modalidad:</strong> Clases virtuales síncronas mediante plataforma Zoom y Meet de la UMSA, con grabación disponible 24/7</div>
-                  <div><strong>Talleres Prácticos:</strong> Laboratorios de computación estadística en Campus Cota Cota, programados en fines de semana o de forma virtual</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-          </div>{/* /columna-izquierda */}
-
-          {/* ── Columna derecha: Panel Lateral con Post Oficial del Programa ── */}
-          <div className="post-sidebar" style={{
-            position: 'sticky',
-            top: '90px',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '1rem',
-          }}>
-
-            {/* Post / Afiche del programa */}
-            <div style={{
-              borderRadius: '14px',
-              overflow: 'hidden',
-              boxShadow: '0 8px 30px rgba(0,0,0,0.13)',
-              border: '2px solid #DCE1E6',
-              background: '#FFFFFF',
-            }}>
-              <img
-                src={programPostUrl}
-                alt={`Afiche oficial: ${prog.title}`}
-                style={{
-                  width: '100%',
-                  height: 'auto',
-                  display: 'block',
-                  objectFit: 'contain',
-                }}
-              />
-            </div>
-
-            {/* Info rápida del programa */}
-            <div style={{
-              background: '#FFFFFF',
-              border: '1.5px solid #DCE1E6',
-              borderRadius: '12px',
-              padding: '1.1rem',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '0.6rem',
-            }}>
-              <div style={{ fontSize: '0.7rem', fontWeight: 800, color: '#006400', textTransform: 'uppercase', letterSpacing: '0.06em', borderBottom: '1px solid #DCE1E6', paddingBottom: '0.5rem', marginBottom: '0.2rem' }}>
-                Datos del Programa
-              </div>
-              {[
-                { label: 'Tipo', value: prog.type || (isMaster ? 'Maestría' : 'Diplomado'), color: '#2563EB' },
-                { label: 'Modalidad', value: prog.modality || 'Híbrida – Turno Noche', color: '#059669' },
-                { label: 'Duración', value: prog.duration || (isMaster ? '24 meses' : '6 meses'), color: '#7C3AED' },
-                { label: 'Créditos', value: prog.credits ? `${prog.credits} CEUB` : 'Acreditado SNC', color: '#D97706' },
-              ].map((item, i) => (
-                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.82rem', gap: '0.5rem' }}>
-                  <span style={{ color: '#646973', fontWeight: 600 }}>{item.label}</span>
-                  <span style={{ fontWeight: 800, color: item.color, textAlign: 'right', maxWidth: '60%' }}>{item.value}</span>
-                </div>
-              ))}
-            </div>
-          </div>{/* /post-sidebar */}
-
-        </div>{/* /tab-layout-grid */}
-
-        {/* ── BANNER INFERIOR DE AYUDA Y CONTACTO CON WHATSAPP FOSFORESCENTE ── */}
-        <section style={{
-          marginTop: '3.5rem',
-          background: 'linear-gradient(135deg, #003800 0%, #006400 50%, #1B3F63 100%)',
-          color: '#FFFFFF',
-          borderRadius: '12px',
-          padding: '2.5rem',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          flexWrap: 'wrap',
-          gap: '1.5rem',
-          boxShadow: '0 8px 30px rgba(0, 100, 0, 0.3)'
-        }}>
-          <div>
-            <h3 style={{ margin: '0 0 0.5rem 0', fontSize: '1.45rem', fontWeight: 800, color: '#FFFFFF' }}>
-              ¿Tienes consultas sobre este programa?
-            </h3>
-            <p style={{ margin: 0, fontSize: '0.95rem', color: '#E6EBF5', maxWidth: '600px', lineHeight: 1.6 }}>
-              La Coordinación de Posgrado de la Carrera de Estadística te brinda atención personalizada sobre requisitos, convalidaciones y proceso de postulación.
-            </p>
-          </div>
-
-          <div style={{ display: 'flex', gap: '0.85rem', flexWrap: 'wrap' }}>
-            <a
-              href={`https://wa.me/59176543210?text=${whatsappMessage}`}
-              target="_blank"
-              rel="noreferrer"
-              style={{
-                background: '#25D366',
-                color: '#FFFFFF',
-                fontWeight: 800,
-                fontSize: '0.92rem',
-                padding: '0.8rem 1.45rem',
-                borderRadius: '8px',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '0.55rem',
-                textDecoration: 'none',
-                boxShadow: '0 4px 14px rgba(0, 0, 0, 0.25)',
-                cursor: 'pointer',
-                transition: 'background 0.18s ease, transform 0.15s ease'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = '#20BA5A';
-                e.currentTarget.style.transform = 'translateY(-1px)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = '#25D366';
-                e.currentTarget.style.transform = 'translateY(0)';
-              }}
-            >
-              <MessageCircle size={19} color="#FFFFFF" strokeWidth={2.2} />
-              <span>Contactar por WhatsApp</span>
-            </a>
-
-            <button
-              onClick={handleBackNavigation}
-              style={{
-                background: 'rgba(255, 255, 255, 0.14)',
-                color: '#FFFFFF',
-                border: '1px solid rgba(255, 255, 255, 0.3)',
-                fontWeight: 700,
-                fontSize: '0.925rem',
-                padding: '0.85rem 1.35rem',
-                borderRadius: '8px',
-                cursor: 'pointer',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '0.4rem',
-                transition: 'all 0.15s ease'
-              }}
-              onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.24)'}
-              onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.14)'}
-            >
-              <ArrowLeft size={16} />
-              <span>Volver a Programas</span>
-            </button>
-          </div>
-        </section>
-
-        </div>{/* /container */}
-      </div>{/* /tabs background div */}
-
-      {/* Responsive adjustments */}
       <style>{`
-        @media (max-width: 768px) {
-          .quick-info-strip {
-            grid-template-columns: 1fr 1fr !important;
-          }
-          .hero-buttons-overlay {
-            position: absolute !important;
-            bottom: 0.75rem !important;
-            left: 0.75rem !important;
-            right: 0.75rem !important;
-            justify-content: center !important;
-            gap: 0.5rem !important;
-          }
-          .hero-buttons-overlay > a {
-            flex: 1 1 160px !important;
-            padding: 0.65rem 0.9rem !important;
-            font-size: 0.8rem !important;
-            justify-content: center !important;
-          }
-        }
-        @media (max-width: 520px) {
-          .quick-info-strip {
+        @media (max-width: 992px) {
+          .program-content-grid {
             grid-template-columns: 1fr !important;
           }
-          .hero-buttons-overlay {
-            position: absolute !important;
-            bottom: 0.5rem !important;
-            left: 0.5rem !important;
-            right: 0.5rem !important;
-            flex-direction: column !important;
-            gap: 0.4rem !important;
+          .program-detail-aside {
+            position: static !important;
+            display: grid !important;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)) !important;
+            align-items: start !important;
           }
-          .hero-buttons-overlay > a {
-            width: 100% !important;
-            padding: 0.6rem 0.8rem !important;
-            font-size: 0.78rem !important;
+          .program-modern-tabs-bar {
+            grid-template-columns: repeat(3, 1fr) !important;
           }
         }
-        /* Tabs responsive: desktop muestra los 5 botones en pantalla, móvil muestra barra desplegable */
-        .program-nav-tabs-desktop {
-          display: grid !important;
-          grid-template-columns: repeat(5, 1fr) !important;
-          gap: 0.5rem !important;
-        }
-        .program-nav-tabs-mobile {
-          display: none !important;
-        }
-        /* Layout 2 columnas: contenido + sidebar post */
-        .tab-layout-grid {
-          grid-template-columns: 1fr 320px;
-        }
-        .post-sidebar {
-          display: flex;
-        }
-        @media (max-width: 1200px) {
-          .tab-layout-grid {
-            grid-template-columns: 1fr 300px !important;
-          }
-        }
-        @media (max-width: 1024px) {
-          .tab-layout-grid {
-            grid-template-columns: 1fr 260px !important;
-          }
-        }
-        @media (max-width: 820px) {
-          .program-nav-tabs-desktop {
+
+        @media (max-width: 680px) {
+          .program-modern-tabs-bar {
             display: none !important;
           }
-          .program-nav-tabs-mobile {
+          .program-mobile-tabs-bar {
             display: block !important;
           }
-          .tab-layout-grid {
+          .program-quick-metrics {
+            grid-template-columns: 1fr 1fr !important;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .program-quick-metrics {
             grid-template-columns: 1fr !important;
           }
-          .post-sidebar {
-            position: static !important;
-            flex-direction: row !important;
-            align-items: flex-start !important;
-            gap: 1rem !important;
+          .program-detail-aside {
+            grid-template-columns: 1fr !important;
           }
-          .post-sidebar > div:first-child {
-            flex: 1 1 auto !important;
-            max-width: 320px !important;
-          }
-          .post-sidebar > div:last-child {
-            flex: 1 1 auto !important;
-          }
-        }
-        @media (max-width: 580px) {
-          .post-sidebar {
-            flex-direction: column !important;
-          }
-          .post-sidebar > div:first-child {
-            max-width: 100% !important;
-          }
-        }
-        /* Animate fade in */
-        .animate-fade-in {
-          animation: fadeInUp 0.35s ease forwards;
-        }
-        @keyframes fadeInUp {
-          from { opacity: 0; transform: translateY(10px); }
-          to   { opacity: 1; transform: translateY(0); }
         }
       `}</style>
+
     </div>
   );
 };

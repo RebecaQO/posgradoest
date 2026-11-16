@@ -1,0 +1,309 @@
+/* ==========================================================================
+   SISTEMA DE DISEÑO INSTITUCIONAL UNIFICADO: FILAS SOBRIAS
+   Aplicado a: 1. Personal Administrativo  2. Docentes  3. Ubicaciones
+   Paleta: variables.css — Cumple accesibilidad AA (4.5:1 contraste mínimo)
+   ========================================================================== */
+
+:root {
+  --inst-roster-bg: var(--color-surface, #ffffff);
+  --inst-roster-line: var(--color-line, #dce1da);
+  --inst-roster-line-subtle: var(--color-border-subtle, #e5eae3);
+  --inst-roster-text: var(--color-text, #33373d);
+  --inst-roster-muted: var(--color-text-muted, #5f656d);
+  --inst-roster-subtle: var(--color-text-subtle, #888e96);
+  --inst-roster-accent: var(--color-accent, #267342);
+  --inst-roster-hover: color-mix(in srgb, var(--inst-roster-accent) 4.5%, var(--inst-roster-bg));
+  --inst-roster-head-bg: color-mix(in srgb, var(--color-bg-primary, #f9f9f6) 75%, transparent);
+}
+
+/* ── Encabezado de sección unificado (13-14px mayúsculas tracking 0.08em) ── */
+.inst-section-heading {
+  font-family: var(--font-family-sans, sans-serif);
+  font-size: 13.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--inst-roster-muted);
+  margin: 0 0 0.85rem 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.inst-section-count {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--inst-roster-subtle);
+  letter-spacing: normal;
+  text-transform: none;
+}
+
+/* ── Contenedor maestro ── */
+.inst-roster {
+  background: var(--inst-roster-bg);
+  border: 1px solid var(--inst-roster-line);
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 2rem;
+}
+
+/* ── Cabecera interna ── */
+.inst-roster-head {
+  display: grid;
+  grid-template-columns: 2.3fr 1.6fr 1.6fr 1fr;
+  gap: 24px;
+  padding: 11px 22px;
+  background: var(--inst-roster-head-bg);
+  border-bottom: 1px solid var(--inst-roster-line);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--inst-roster-muted);
+}
+.inst-roster-head--location {
+  grid-template-columns: 2.5fr 1.5fr 1.5fr;
+}
+
+/* ── Fila enriquecida ── */
+.inst-row {
+  position: relative;
+  display: grid;
+  grid-template-columns: 2.3fr 1.6fr 1.6fr 1fr;
+  gap: 24px;
+  align-items: center;
+  padding: 17px 22px;
+  border-bottom: 1px solid var(--inst-roster-line-subtle);
+  border-left: 2px solid transparent;
+  transition: background 120ms ease, border-left-color 120ms ease;
+  cursor: default;
+}
+.inst-row:last-child {
+  border-bottom: none;
+}
+.inst-row:hover {
+  background: var(--inst-roster-hover);
+  border-left-color: var(--inst-roster-accent);
+}
+.inst-row:focus-within {
+  outline: 2px solid var(--inst-roster-accent);
+  outline-offset: -2px;
+  border-left-color: var(--inst-roster-accent);
+}
+.inst-row--location {
+  grid-template-columns: 2.5fr 1.5fr 1.5fr;
+}
+
+/* ── Columna 1: Identidad ── */
+.inst-identity {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+.inst-avatar {
+  width: 54px;
+  height: 54px;
+  flex: 0 0 54px;
+  border-radius: 8px;
+  border: 1px solid var(--inst-roster-line);
+  background: var(--color-bg-secondary, #f3efe6);
+  object-fit: cover;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.04);
+  display: grid;
+  place-items: center;
+  color: var(--inst-roster-subtle);
+  font-weight: 700;
+  font-size: 1.15rem;
+  overflow: hidden;
+}
+.inst-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.inst-identity-text {
+  min-width: 0;
+  flex: 1;
+}
+.inst-name {
+  font-size: 15.5px;
+  font-weight: 600;
+  color: var(--inst-roster-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.3;
+  display: block;
+}
+.inst-cargo {
+  font-size: 13px;
+  color: var(--inst-roster-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 2px;
+  line-height: 1.35;
+  display: block;
+}
+
+/* ── Columna 2: Dato Académico / Área ── */
+.inst-meta {
+  min-width: 0;
+}
+.inst-meta-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--inst-roster-subtle);
+  font-weight: 700;
+  display: block;
+  margin-bottom: 2px;
+}
+.inst-meta-value {
+  font-size: 13.5px;
+  color: var(--inst-roster-text);
+  font-weight: 500;
+  line-height: 1.35;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+}
+
+/* ── Columna 3: Ubicación ── */
+.inst-location {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.inst-location-primary {
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--inst-roster-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.3;
+}
+.inst-location-secondary {
+  font-size: 12.5px;
+  color: var(--inst-roster-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.3;
+}
+
+/* ── Columna 4: Acción / Contacto ── */
+.inst-action-col {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+}
+.inst-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--inst-roster-accent);
+  font-size: 13px;
+  font-weight: 500;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: opacity 120ms ease;
+}
+.inst-action:hover {
+  text-decoration: underline;
+}
+.inst-action:focus-visible {
+  outline: 2px solid var(--inst-roster-accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+.inst-action-empty {
+  color: var(--inst-roster-subtle);
+  font-size: 13px;
+}
+
+/* ── Específico para Ubicaciones ── */
+.inst-location-sede {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--inst-roster-text);
+  line-height: 1.3;
+}
+.inst-location-address {
+  font-size: 13px;
+  color: var(--inst-roster-muted);
+  margin-top: 3px;
+  line-height: 1.4;
+}
+.inst-location-detail {
+  font-size: 12.5px;
+  color: var(--inst-roster-subtle);
+  margin-top: 2px;
+  line-height: 1.4;
+}
+
+/* ── Filtros con tabs discretos con subrayado (sin botones tipo pastilla) ── */
+.inst-tabs-filter {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  border-bottom: 1px solid var(--inst-roster-line);
+  margin-bottom: 1.25rem;
+  overflow-x: auto;
+}
+.inst-tab-button {
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--inst-roster-muted);
+  padding: 0.55rem 1rem;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color 120ms ease, border-bottom-color 120ms ease;
+}
+.inst-tab-button:hover {
+  color: var(--inst-roster-accent);
+  border-bottom-color: var(--inst-roster-accent);
+}
+.inst-tab-button.is-active {
+  color: var(--inst-roster-accent);
+  border-bottom-color: var(--inst-roster-accent);
+  font-weight: 700;
+}
+
+/* ── Responsive móvil (apilar en una columna sin convertirse en tarjeta con sombra) ── */
+@media (max-width: 768px) {
+  .inst-roster-head {
+    display: none;
+  }
+  .inst-row,
+  .inst-row--location {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    padding: 14px 16px;
+    border-left: none;
+  }
+  .inst-row:hover {
+    border-left: none;
+  }
+  .inst-name,
+  .inst-cargo,
+  .inst-meta-value,
+  .inst-location-primary,
+  .inst-location-secondary,
+  .inst-action {
+    white-space: normal;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .inst-row {
+    transition: none;
+  }
+}

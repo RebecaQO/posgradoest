@@ -3,12 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\EdicionPrograma;
-use App\Models\ProgramaPostgrado;
 use App\Models\MallaCurricular;
+use App\Models\ProgramaPostgrado;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 
 class EdicionProgramaController extends Controller
 {
@@ -60,13 +60,13 @@ class EdicionProgramaController extends Controller
         $edicion = EdicionPrograma::with([
             'programa.maestria',
             'programa.diplomado',
-            'malla.modulos.materias.materia',
+            'malla.modulos.materias.materia.docentes',
             'malla.materiasDiplomado.materia',
             'docentes',
             'defensas',
         ])->find($id);
 
-        if (!$edicion) {
+        if (! $edicion) {
             return response()->json([
                 'success' => false,
                 'message' => 'Edición no encontrada',
@@ -87,7 +87,7 @@ class EdicionProgramaController extends Controller
     {
         $programa = ProgramaPostgrado::find($id);
 
-        if (!$programa) {
+        if (! $programa) {
             return response()->json([
                 'success' => false,
                 'message' => 'Programa no encontrado',
@@ -124,59 +124,55 @@ class EdicionProgramaController extends Controller
             ],
 
             'fecha_inicio' => [
-                'required',
+                'nullable',
                 'date_format:Y-m-d',
             ],
 
             'fecha_fin' => [
-                'required',
+                'nullable',
                 'date_format:Y-m-d',
                 'after_or_equal:fecha_inicio',
             ],
 
             'duracion' => [
-                'required',
+                'nullable',
                 'string',
                 'max:100',
-                'filled',
             ],
 
             'horario' => [
-                'required',
+                'nullable',
                 'string',
                 'max:150',
-                'filled',
             ],
 
             'descripcion' => [
-                'required',
+                'nullable',
                 'string',
-                'filled',
             ],
 
             'modalidad_titulacion' => [
-                'required',
+                'nullable',
                 'string',
-                'filled',
             ],
 
             'requisitos' => [
-                'required',
+                'nullable',
                 'string',
-                'filled',
             ],
 
             'convocatoria' => [
-                'required',
+                'nullable',
                 'string',
-                'filled',
             ],
 
             'formulario' => [
-                'required',
+                'nullable',
                 'string',
-                'filled',
             ],
+
+            'banner' => ['nullable', 'url:http,https', 'max:2048'],
+            'folleto' => ['nullable', 'url:http,https', 'max:2048'],
 
             'estado' => [
                 'sometimes',
@@ -216,8 +212,7 @@ class EdicionProgramaController extends Controller
         if ($malla->id_programa !== (int) $datos['id_programa']) {
             return response()->json([
                 'success' => false,
-                'message' =>
-                'La malla curricular no pertenece al programa seleccionado',
+                'message' => 'La malla curricular no pertenece al programa seleccionado',
             ], 422);
         }
 
@@ -246,7 +241,7 @@ class EdicionProgramaController extends Controller
     {
         $edicion = EdicionPrograma::find($id);
 
-        if (!$edicion) {
+        if (! $edicion) {
             return response()->json([
                 'success' => false,
                 'message' => 'Edición no encontrada',
@@ -258,28 +253,23 @@ class EdicionProgramaController extends Controller
 
         $fechaInicio = $request->input(
             'fecha_inicio',
-            $edicion->fecha_inicio->format('Y-m-d')
+            $edicion->fecha_inicio?->format('Y-m-d')
         );
 
         $fechaFin = $request->input(
             'fecha_fin',
-            $edicion->fecha_fin->format('Y-m-d')
+            $edicion->fecha_fin?->format('Y-m-d')
         );
 
-        Validator::make([
-            'fecha_inicio' => $fechaInicio,
-            'fecha_fin' => $fechaFin,
-        ], [
-            'fecha_inicio' => [
-                'required',
-                'date_format:Y-m-d',
-            ],
-            'fecha_fin' => [
-                'required',
-                'date_format:Y-m-d',
-                'after_or_equal:fecha_inicio',
-            ],
-        ])->validate();
+        if ($fechaInicio || $fechaFin) {
+            Validator::make([
+                'fecha_inicio' => $fechaInicio,
+                'fecha_fin' => $fechaFin,
+            ], [
+                'fecha_inicio' => ['nullable', 'date_format:Y-m-d'],
+                'fecha_fin' => ['nullable', 'date_format:Y-m-d', 'after_or_equal:fecha_inicio'],
+            ])->validate();
+        }
 
         // No se permite cambiar id_programa ni id_malla.
 
@@ -295,66 +285,62 @@ class EdicionProgramaController extends Controller
 
             'fecha_inicio' => [
                 'sometimes',
-                'required',
+                'nullable',
                 'date_format:Y-m-d',
             ],
 
             'fecha_fin' => [
                 'sometimes',
-                'required',
+                'nullable',
                 'date_format:Y-m-d',
             ],
 
             'duracion' => [
                 'sometimes',
-                'required',
+                'nullable',
                 'string',
                 'max:100',
-                'filled',
             ],
 
             'horario' => [
                 'sometimes',
-                'required',
+                'nullable',
                 'string',
                 'max:150',
-                'filled',
             ],
 
             'descripcion' => [
                 'sometimes',
-                'required',
+                'nullable',
                 'string',
-                'filled',
             ],
 
             'modalidad_titulacion' => [
                 'sometimes',
-                'required',
+                'nullable',
                 'string',
-                'filled',
             ],
 
             'requisitos' => [
                 'sometimes',
-                'required',
+                'nullable',
                 'string',
-                'filled',
             ],
 
             'convocatoria' => [
                 'sometimes',
-                'required',
+                'nullable',
                 'string',
-                'filled',
             ],
 
             'formulario' => [
                 'sometimes',
-                'required',
+                'nullable',
                 'string',
-                'filled',
             ],
+
+            'banner' => ['sometimes', 'nullable', 'url:http,https', 'max:2048'],
+            'folleto' => ['sometimes', 'nullable', 'url:http,https', 'max:2048'],
 
             'estado' => [
                 'sometimes',
@@ -391,7 +377,7 @@ class EdicionProgramaController extends Controller
     {
         $edicion = EdicionPrograma::find($id);
 
-        if (!$edicion) {
+        if (! $edicion) {
             return response()->json([
                 'success' => false,
                 'message' => 'Edición no encontrada',
@@ -405,8 +391,7 @@ class EdicionProgramaController extends Controller
         ) {
             return response()->json([
                 'success' => false,
-                'message' =>
-                'No se puede eliminar la edición porque tiene docentes o defensas relacionados',
+                'message' => 'No se puede eliminar la edición porque tiene docentes o defensas relacionados',
             ], 409);
         }
 
@@ -417,8 +402,7 @@ class EdicionProgramaController extends Controller
             if ($error->getCode() === '23503') {
                 return response()->json([
                     'success' => false,
-                    'message' =>
-                    'No se puede eliminar la edición porque tiene registros relacionados',
+                    'message' => 'No se puede eliminar la edición porque tiene registros relacionados',
                 ], 409);
             }
 
@@ -443,6 +427,7 @@ class EdicionProgramaController extends Controller
 
         $resultado = $ediciones->map(function ($edicion) {
             $gestion = $edicion->fecha_inicio ? substr($edicion->fecha_inicio, 0, 4) : date('Y');
+
             return [
                 'id' => $edicion->id_edicion,
                 'id_edicion' => $edicion->id_edicion,
@@ -450,7 +435,7 @@ class EdicionProgramaController extends Controller
                 'nivel' => $edicion->programa?->tipo_programa ?? 'Postgrado',
                 'titulo' => $edicion->nombre_edicion ?? "Convocatoria Gestión {$gestion}",
                 'programa' => $edicion->programa?->nombre_programa ?? 'Programa de Postgrado',
-                'resolucion_hcu' => 'Res. HCU ' . $gestion,
+                'resolucion_hcu' => 'Res. HCU '.$gestion,
                 'enlace_pdf' => $edicion->convocatoria ?? null,
                 'estado' => $edicion->estado,
             ];

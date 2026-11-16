@@ -109,4 +109,13 @@
   --color-umsa-blue-border: rgba(79, 126, 159, 0.25);
   --color-umsa-gold: #9e7512;
   --color-umsa-gold-subtle: #fdf7e7;
+
+  /* Tokens de diseño unificado institucional */
+  --color-bg: var(--color-bg-primary, #f9f9f6);
+  --color-surface: var(--color-bg-white, #ffffff);
+  --color-text: var(--color-text-main, #33373d);
+  --color-line: var(--color-border, #dce1da);
+  --color-accent: var(--color-green-inst, #267342);
+  --color-hover: color-mix(in srgb, var(--color-green-inst, #267342) 5%, #ffffff);
+  --color-focus: var(--color-green-inst, #267342);
 }

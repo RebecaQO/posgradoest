@@ -1,66 +1,81 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { MessageCircle, Plus, Minus, BookOpen, Users, Calendar, Award, Laptop, HelpCircle, Clock, FileText, Briefcase } from 'lucide-react';
+import {
+  MessageCircle,
+  Plus,
+  Minus,
+  BookOpen,
+  Users,
+  Calendar,
+  HelpCircle,
+  FileText,
+  Clock,
+  Laptop,
+  Database,
+  Award,
+  Briefcase,
+  GraduationCap
+} from 'lucide-react';
 
 const faqs = [
   {
-    icon: Calendar,
-    category: 'Duración',
+    icon: Clock,
+    category: 'Duración & Calendario',
     question: '¿Cuánto dura la Maestría en Ciencia y Análisis de Datos?',
     answer: 'La tercera versión tiene actividades académicas programadas desde abril de 2027 hasta enero de 2029 aproximadamente 20 meses, equivalentes a un año y ocho meses. A este periodo se añade el tiempo previsto por la normativa para la tesis de maestría.',
   },
   {
-    icon: Users,
-    category: 'Postulación',
+    icon: GraduationCap,
+    category: 'Perfil de Postulación',
     question: '¿Quiénes pueden postular a la maestría?',
     answer: 'La preinscripción solicita título académico y título profesional. El programa tiene orientación multidisciplinaria; la información consultada no establece una lista cerrada de carreras admitidas. La aceptación se comunica después de revisar la postulación.',
   },
   {
     icon: Laptop,
-    category: 'Modalidad',
+    category: 'Modalidad de Estudio',
     question: '¿Cuál es la modalidad de estudio?',
     answer: 'La modalidad publicada es semipresencial. Algunas materias serán 100% virtual y otras combinadas hibridas.',
   },
   {
     icon: FileText,
-    category: 'Requisitos',
+    category: 'Requisitos & Documentos',
     question: '¿Qué documentos se necesitan para postular?',
     answer: 'Se solicitan copias escaneadas del título académico, título profesional, hoja de vida resumida y cédula de identidad por ambos lados. Después de la admisión se indican los documentos que deben presentarse físicamente.',
   },
   {
-    icon: BookOpen,
-    category: 'Contenido',
+    icon: Database,
+    category: 'Plan & Conocimientos',
     question: '¿Qué conocimientos se desarrollan durante la maestría?',
     answer: 'Se estudian programación estadística, bases de datos, análisis multivariante, Big Data, minería de datos, modelos lineales y no lineales, y aprendizaje automático y profundo.',
   },
   {
-    icon: Clock,
-    category: 'Horarios',
+    icon: Calendar,
+    category: 'Horarios de Clases',
     question: '¿Cuáles son los horarios de clases?',
     answer: 'Las clases son los lunes y miércoles, de 19:00 a 22:00, y los sábados, de 08:00 a 13:00.',
   },
   {
     icon: Award,
-    category: 'Titulación',
+    category: 'Titulación & Certificaciones',
     question: '¿Qué título y certificaciones intermedias se obtienen?',
     answer: 'El título es Magister Scientiarum en Ciencia y Análisis de Datos. La tercera versión contempla dos diplomas intermedios: Ciencia de Datos y Big Data, y Ciencia de Datos y Data Mining.',
   },
   {
     icon: Briefcase,
-    category: 'Campo Laboral',
+    category: 'Campo de Aplicación',
     question: '¿En qué ámbitos se pueden aplicar los conocimientos adquiridos?',
     answer: 'En investigación y análisis de datos, así como en asesoramiento a instituciones públicas y privadas. La formación aborda aplicaciones en negocios, economía, salud y tecnología.',
   },
 ];
 
 const categoryColors = {
-  'Duración':      { bg: '#edf4f9', text: '#4f7e9f', dot: '#4f7e9f' },
-  'Postulación':   { bg: '#f5f0fa', text: '#7c5cbf', dot: '#7c5cbf' },
-  'Modalidad':     { bg: '#fdf7e7', text: '#9e7512', dot: '#9e7512' },
-  'Requisitos':    { bg: '#eaf5ec', text: '#267342', dot: '#267342' },
-  'Contenido':     { bg: '#f0f4ff', text: '#4060bf', dot: '#4060bf' },
-  'Horarios':      { bg: '#fff0ee', text: '#b3392f', dot: '#b3392f' },
-  'Titulación':    { bg: '#eaf5ec', text: '#267342', dot: '#267342' },
-  'Campo Laboral': { bg: '#edf4f9', text: '#4f7e9f', dot: '#4f7e9f' },
+  'Duración & Calendario':       { bg: '#edf4f9', text: '#31698a', dot: '#31698a' },
+  'Perfil de Postulación':       { bg: '#f5f0fa', text: '#6b46c1', dot: '#6b46c1' },
+  'Modalidad de Estudio':        { bg: '#f0f4ff', text: '#2b5ea7', dot: '#2b5ea7' },
+  'Requisitos & Documentos':     { bg: '#eaf5ec', text: '#267342', dot: '#267342' },
+  'Plan & Conocimientos':        { bg: '#fef3e7', text: '#b45309', dot: '#b45309' },
+  'Horarios de Clases':          { bg: '#e6f7f5', text: '#0e7c7c', dot: '#0e7c7c' },
+  'Titulación & Certificaciones': { bg: '#fdf6e6', text: '#92600b', dot: '#92600b' },
+  'Campo de Aplicación':         { bg: '#eef2fb', text: '#2c4e97', dot: '#2c4e97' },
 };
 
 const FAQItem = ({ faq, isOpen, onToggle, index }) => {
@@ -241,7 +256,7 @@ export const FAQSection = () => {
             Preguntas <span className="highlight">frecuentes</span>
           </h2>
           <p className="section-subtitle">
-            Todo lo que necesitas saber sobre la Maestría en Ciencia y Análisis de Datos y nuestros programas de posgrado.
+            Información esencial sobre la Maestría en Ciencia y Análisis de Datos: duración, requisitos, modalidad, horarios y certificaciones.
           </p>
         </div>
 

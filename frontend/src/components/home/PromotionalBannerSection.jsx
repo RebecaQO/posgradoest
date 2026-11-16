@@ -1,19 +1,126 @@
-import React from 'react';
-import { ArrowRight, MessageCircle, CheckCircle2 } from 'lucide-react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { ArrowRight, BookOpen, CalendarDays, MessageCircle, Users } from 'lucide-react';
+import { programaService } from '../../services/programaService';
 import cienciaBanner from '../../assets/images/banner/banner_maestria_datos.png';
 
+const meaningful = (value) => {
+  if (typeof value !== 'string') return '';
+  const text = value.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+  if (text.length < 8 || !/[aeiouáéíóú]/i.test(text)) return '';
+  if (/^(.)\1{5,}$/i.test(text) || /^[a-z]{7,}$/i.test(text) && !/[aeiouáéíóú].*[aeiouáéíóú]/i.test(text)) return '';
+  return text;
+};
+
+const getSubjects = (edition) => {
+  const fromModules = (edition?.malla?.modulos || [])
+    .flatMap((module) => module.materias || [])
+    .map((item) => meaningful(item.materia?.nombre_mat || item.nombre_mat))
+    .filter(Boolean);
+  const fromDiploma = (edition?.malla?.materias_diplomado || [])
+    .map((item) => meaningful(item.materia?.nombre_mat || item.nombre_mat))
+    .filter(Boolean);
+  return [...new Set([...fromModules, ...fromDiploma])];
+};
+
+const getTeachers = (edition) => {
+  const teachers = (edition?.docentes || []).map((teacher) =>
+    meaningful(teacher.nombre_completo || `${teacher.nombre_doc || ''} ${teacher.apellido_doc || ''}`)
+  ).filter(Boolean);
+  return [...new Set(teachers)];
+};
+
+const titleCaseProgram = (name = '') => name
+  .toLocaleLowerCase('es')
+  .replace(/\b(maestria)\b/i, 'Maestría')
+  .replace(/\b(ciencia|datos|analisis|estadistica|aplicada|gestion|finanzas|economia|educacion)\b/gi, (word) => {
+    const accents = { analisis: 'Análisis', estadistica: 'Estadística', economia: 'Economía', educacion: 'Educación', gestion: 'Gestión' };
+    return accents[word] || word.charAt(0).toLocaleUpperCase('es') + word.slice(1);
+  });
+
+const editionStatus = (edition) => meaningful(edition?.estado) || '';
+
+const scoreProgram = (program) => {
+  const editions = program.ediciones || [];
+  const edition = editions.find((item) => ['abierta', 'en curso', 'en proceso'].includes((item.estado || '').toLowerCase())) || editions[0];
+  const subjects = getSubjects(edition);
+  const teachers = getTeachers(edition);
+  return [
+    meaningful(program.nombre_programa), meaningful(program.descripcion), meaningful(program.area_conocimiento),
+    meaningful(program.perfil_aspirante), meaningful(program.perfil_egreso), meaningful(program.informacion_documentada?.mision),
+    meaningful(edition?.nombre_edicion), meaningful(edition?.descripcion), meaningful(edition?.requisitos),
+    edition?.banner, edition?.folleto, subjects.length, teachers.length,
+  ].filter(Boolean).length;
+};
+
 export const PromotionalBannerSection = ({ onSelectProgram }) => {
+  const [bannerUrl, setBannerUrl] = useState(cienciaBanner);
+  const [targetProgram, setTargetProgram] = useState(null);
+  const [activeEdition, setActiveEdition] = useState(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    programaService.getActivos().then((data) => {
+      const list = Array.isArray(data) ? data : [];
+      const promoted = list.find((program) => program.promocionado);
+      const candidates = list.filter((program) => (program.type || program.tipo_programa || '').toLowerCase().includes('maestr'));
+      const featured = promoted || [...(candidates.length ? candidates : list)].sort((a, b) => scoreProgram(b) - scoreProgram(a))[0];
+      if (!featured) return;
+      if (isMounted) {
+        setTargetProgram(featured);
+        const edicionActiva = featured.ediciones?.find((edicion) => ['Abierta', 'En Curso', 'En Proceso'].includes(edicion.estado))
+          ?? featured.ediciones?.[0];
+        setActiveEdition(edicionActiva || null);
+        const banner = featured.banner || edicionActiva?.banner;
+        if (banner) setBannerUrl(banner);
+      }
+    }).catch((error) => {
+      console.error('Error cargando banner promocional desde la base de datos:', error);
+    });
+    return () => { isMounted = false; };
+  }, []);
+
+  const academicDetails = useMemo(() => {
+    const subjects = getSubjects(activeEdition);
+    const teachers = getTeachers(activeEdition);
+    const documented = targetProgram?.informacion_documentada || {};
+    const values = [];
+    const area = meaningful(targetProgram?.area_conocimiento || targetProgram?.area);
+    const summary = meaningful(targetProgram?.descripcion || targetProgram?.description);
+    const editionName = meaningful(activeEdition?.nombre_edicion);
+    const status = editionStatus(activeEdition);
+    const programMode = meaningful(targetProgram?.maestria?.tipo);
+    const requirements = meaningful(activeEdition?.requisitos);
+    const duration = meaningful(activeEdition?.duracion);
+    const schedule = meaningful(activeEdition?.horario);
+    if (area) values.push({ label: 'Área académica', value: area, icon: BookOpen });
+    if (editionName || status) values.push({ label: 'Edición', value: [editionName, status].filter(Boolean).join(' · '), icon: CalendarDays });
+    if (programMode) values.push({ label: 'Modalidad del programa', value: programMode, icon: BookOpen });
+    if (duration) values.push({ label: 'Duración', value: duration, icon: CalendarDays });
+    if (schedule) values.push({ label: 'Horario', value: schedule, icon: CalendarDays });
+    if (requirements) values.push({ label: 'Requisitos', value: requirements, icon: BookOpen });
+    if (subjects.length) values.push({ label: 'Asignaturas registradas', value: subjects.join(' · '), icon: BookOpen });
+    if (teachers.length) values.push({ label: 'Equipo docente', value: teachers.join(' · '), icon: Users });
+    const description = summary || (subjects.length
+      ? `La malla curricular registrada incluye ${subjects.join(', ')}.`
+      : teachers.length
+        ? `La edición cuenta con ${teachers.length} docentes registrados en la base académica.`
+        : 'Consulta la información académica disponible para esta maestría.');
+    return { description, values, mission: meaningful(documented.mision) };
+  }, [activeEdition, targetProgram]);
+
   const handleRedirect = () => {
+    const pid = targetProgram?.id_programa ?? targetProgram?.id;
+    if (!pid) return;
     if (onSelectProgram) {
-      onSelectProgram('PG-EST-002');
+      onSelectProgram(pid);
     } else {
-      window.location.hash = 'programa/PG-EST-002';
+      window.location.hash = `programa/${pid}`;
     }
   };
 
-  const whatsappMessage = encodeURIComponent(
-    'Hola, deseo consultar sobre la Maestría en Ciencia y Análisis de Datos (III Versión).'
-  );
+  const programTitle = titleCaseProgram(meaningful(targetProgram?.nombre_programa || targetProgram?.title) || 'Oferta de Maestría');
+  const programType = (targetProgram?.tipo_programa || targetProgram?.type || '').toLowerCase().includes('maestr') ? 'Maestría' : 'Diplomado';
+  const whatsappMessage = encodeURIComponent(`Hola, deseo información sobre ${programTitle}${activeEdition?.nombre_edicion ? `, ${activeEdition.nombre_edicion}` : ''}.`);
 
   return (
     <section
@@ -54,8 +161,8 @@ export const PromotionalBannerSection = ({ onSelectProgram }) => {
           className="promo-image-box"
         >
           <img
-            src={cienciaBanner}
-            alt="Maestría en Ciencia y Análisis de Datos - UMSA"
+            src={bannerUrl}
+            alt={`Banner de ${programTitle} - UMSA`}
             style={{
               maxWidth: '100%',
               maxHeight: '340px',
@@ -96,7 +203,7 @@ export const PromotionalBannerSection = ({ onSelectProgram }) => {
                 margin: '0 0 0.35rem 0',
               }}
             >
-              UMSA · Facultad de Ciencias Puras y Naturales · Carrera de Estadística
+              {programType} · UMSA · Facultad de Ciencias Puras y Naturales · Carrera de Estadística
             </p>
             <h2
               style={{
@@ -108,7 +215,7 @@ export const PromotionalBannerSection = ({ onSelectProgram }) => {
                 letterSpacing: '-0.025em',
               }}
             >
-              Maestría en Ciencia y Análisis de Datos
+              {programTitle}
             </h2>
             <p
               style={{
@@ -118,7 +225,7 @@ export const PromotionalBannerSection = ({ onSelectProgram }) => {
                 fontWeight: 700,
               }}
             >
-              III Versión — Modalidad Semipresencial
+              {activeEdition ? [meaningful(activeEdition.nombre_edicion), editionStatus(activeEdition)].filter(Boolean).join(' — ') || 'Edición académica vigente' : 'Oferta académica de posgrado'}
             </p>
           </div>
 
@@ -132,8 +239,21 @@ export const PromotionalBannerSection = ({ onSelectProgram }) => {
               maxWidth: '68ch',
             }}
           >
-            Aprende R, Python, Machine Learning, Big Data, Minería de Datos, Inteligencia Artificial y Modelos lineales generalizados en un programa multidisciplinario enfocado en profesionales que buscan impacto real.
+            {academicDetails.description}
           </p>
+
+          {academicDetails.values.length > 0 && (
+            <dl style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 240px), 1fr))', gap: '0.8rem 1.5rem', margin: '0.15rem 0 0' }}>
+              {academicDetails.values.map(({ label, value, icon: Icon }) => (
+                <div key={label} style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '0.18rem' }}>
+                  <dt style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', margin: 0, color: '#93c5fd', fontSize: '0.7rem', fontWeight: 750, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                    <Icon size={14} aria-hidden="true" />{label}
+                  </dt>
+                  <dd style={{ margin: 0, color: '#e2e8f0', fontSize: '0.82rem', lineHeight: 1.5 }}>{value}</dd>
+                </div>
+              ))}
+            </dl>
+          )}
 
           {/* Acciones principales */}
           <div
@@ -147,6 +267,7 @@ export const PromotionalBannerSection = ({ onSelectProgram }) => {
           >
             <button
               onClick={handleRedirect}
+              disabled={!targetProgram}
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
@@ -160,9 +281,10 @@ export const PromotionalBannerSection = ({ onSelectProgram }) => {
                 fontWeight: 800,
                 letterSpacing: '0.04em',
                 textTransform: 'uppercase',
-                cursor: 'pointer',
                 boxShadow: '0 4px 14px rgba(37, 99, 235, 0.4)',
                 transition: 'all 0.2s ease',
+                opacity: targetProgram ? 1 : 0.65,
+                cursor: targetProgram ? 'pointer' : 'not-allowed',
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.background = '#1d4ed8';
@@ -173,7 +295,7 @@ export const PromotionalBannerSection = ({ onSelectProgram }) => {
                 e.currentTarget.style.transform = 'translateY(0)';
               }}
             >
-              <span>Ver Maestría en Más Información</span>
+              <span>Ver más información del {programType.toLocaleLowerCase('es')}</span>
               <ArrowRight size={15} />
             </button>
 

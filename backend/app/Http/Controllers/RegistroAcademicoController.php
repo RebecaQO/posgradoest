@@ -547,7 +547,7 @@ class RegistroAcademicoController extends Controller
             $edicion->load([
                 'programa.maestria',
                 'programa.diplomado',
-                'malla.modulos.materias.materia',
+                'malla.modulos.materias.materia.docentes',
                 'malla.materiasDiplomado.materia',
                 'docentes',
             ]);

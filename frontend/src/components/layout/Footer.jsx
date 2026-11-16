@@ -165,8 +165,6 @@ export const Footer = ({ onNavigate }) => {
             <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.55rem' }}>
               {[
                 { label: 'Dirección de Estadística', action: () => onNavigate('institucion') },
-                { label: 'IETA', action: () => onNavigate('institucion') },
-                { label: 'Club Científico', action: () => onNavigate('institucion') },
                 { label: 'Programas de Postgrado', action: () => onNavigate('programas') },
                 { label: 'Campus Virtual', href: info.campus_virtual_url, external: true },
               ].map((item) => (

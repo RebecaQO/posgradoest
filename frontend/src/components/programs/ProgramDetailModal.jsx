@@ -14,18 +14,19 @@ import {
   Download
 } from 'lucide-react';
 import { programaService } from '../../services/programaService';
-import { docenteService } from '../../services/docenteService';
 
 export const ProgramDetailModal = ({ program: initialProgram, onClose, onApply }) => {
   const [activeTab, setActiveTab] = useState('perfil');
   const [programData, setProgramData] = useState(initialProgram);
   const [loading, setLoading] = useState(!initialProgram?.curriculum);
-  const [docentes, setDocentes] = useState([]);
   const [docentesLoading, setDocentesLoading] = useState(true);
 
   useEffect(() => {
-    const targetId = initialProgram?.id ?? initialProgram?.id_programa;
-    if (!targetId) return;
+    const targetId = initialProgram?.id_programa ?? initialProgram?.id;
+    if (!targetId) {
+      setDocentesLoading(false);
+      return;
+    }
 
     const fetchFullData = async () => {
       try {
@@ -34,7 +35,7 @@ export const ProgramDetailModal = ({ program: initialProgram, onClose, onApply }
         const raw = resp?.data ?? resp;
         if (!raw) return;
 
-        const edicion = raw.ediciones?.[0] ?? {};
+        const edicion = raw.ediciones?.find((item) => ['Abierta', 'En Curso', 'En Proceso'].includes(item.estado)) ?? raw.ediciones?.[0] ?? {};
         const mallaActiva = raw.mallas?.find(m => m.activo) ?? raw.mallas?.[0] ?? {};
         const esMaestria = String(raw.tipo_programa || '').toLowerCase().includes('maestr');
 
@@ -48,6 +49,7 @@ export const ProgramDetailModal = ({ program: initialProgram, onClose, onApply }
               credits: m.pivot?.creditos ?? 0,
               hours: m.pivot?.carga_horaria ?? 0,
               desc: m.materia?.descripcion ?? '',
+              docentes: m.materia?.docentes ?? [],
             })),
           }));
         } else if (!esMaestria && Array.isArray(mallaActiva.materias_diplomado)) {
@@ -58,6 +60,7 @@ export const ProgramDetailModal = ({ program: initialProgram, onClose, onApply }
               credits: m.pivot?.creditos ?? 0,
               hours: m.pivot?.carga_horaria ?? 0,
               desc: m.materia?.descripcion ?? '',
+              docentes: m.materia?.docentes ?? [],
             })),
           }];
         }
@@ -74,6 +77,8 @@ export const ProgramDetailModal = ({ program: initialProgram, onClose, onApply }
           modality: edicion.modalidad_titulacion,
           credits: edicion.creditos,
           enlace_convocatoria_drive: edicion.convocatoria,
+          banner: edicion.banner,
+          folleto: edicion.folleto,
           enlace_pdf_programa: raw.enlace_pdf_programa,
           curriculum,
           mallas: raw.mallas,
@@ -84,28 +89,12 @@ export const ProgramDetailModal = ({ program: initialProgram, onClose, onApply }
         console.error('Error cargando datos del programa:', err);
       } finally {
         setLoading(false);
+        setDocentesLoading(false);
       }
     };
 
     fetchFullData();
   }, [initialProgram?.id, initialProgram?.id_programa]);
-
-  // Fetch docentes
-  useEffect(() => {
-    const fetchDocentes = async () => {
-      try {
-        setDocentesLoading(true);
-        const data = await docenteService.getPublicDocentes();
-        setDocentes(Array.isArray(data) ? data : []);
-      } catch (err) {
-        console.error('Error cargando docentes:', err);
-      } finally {
-        setDocentesLoading(false);
-      }
-    };
-
-    fetchDocentes();
-  }, []);
 
   if (!initialProgram) return null;
 
@@ -120,15 +109,23 @@ export const ProgramDetailModal = ({ program: initialProgram, onClose, onApply }
   const hasPerfilAspirante = Boolean(prog.perfil_aspirante && prog.perfil_aspirante.trim());
   const hasRequisitos = Boolean(prog.requisitos_admision && prog.requisitos_admision.trim());
 
-  // Collect unique docente names from curriculum for matching
-  const curriculumDocentes = new Set();
-  curriculum.forEach(sem => {
-    sem.modules.forEach(mod => {
-      if (mod.docentes) {
-        mod.docentes.split(',').forEach(d => curriculumDocentes.add(d.trim()));
-      }
+  // Esta ficha usa docentes relacionados con las ediciones y materias del programa
+  const docentesMap = new Map();
+  (prog.ediciones || []).forEach(ed => {
+    (ed.docentes || []).forEach(doc => {
+      const id = doc.id_doc ?? doc.id;
+      if (id) docentesMap.set(Number(id), doc);
     });
   });
+  curriculum
+    .flatMap(semestre => semestre.modules || [])
+    .flatMap(materia => Array.isArray(materia.docentes) ? materia.docentes : [])
+    .filter(docente => docente && (docente.id_doc ?? docente.id) != null)
+    .forEach(docente => {
+      const id = docente.id_doc ?? docente.id;
+      if (!docentesMap.has(Number(id))) docentesMap.set(Number(id), docente);
+    });
+  const docentes = Array.from(docentesMap.values());
 
   const tabs = [
     { id: 'perfil', label: 'Perfil del Graduado', icon: GraduationCap },
@@ -512,7 +509,7 @@ export const ProgramDetailModal = ({ program: initialProgram, onClose, onApply }
                           lineHeight: 1.3,
                           marginBottom: '0.35rem'
                         }}>
-                          {doc.nombre_completo}
+                          {doc.nombre_completo || `${doc.nombre_doc || doc.nombre || ''} ${doc.apellido_doc || doc.apellido || ''}`.trim()}
                         </div>
                         <div style={{
                           fontSize: '0.85rem',
@@ -524,16 +521,16 @@ export const ProgramDetailModal = ({ program: initialProgram, onClose, onApply }
                           gap: '0.35rem'
                         }}>
                           <Award size={14} />
-                          {doc.titulo || 'Docente'}
+                          {doc.titulo_academico || doc.titulo || 'Docente'}
                         </div>
-                        {doc.especialidad && (
+                        {(doc.descripcion_profesional || doc.especialidad) && (
                           <div style={{
                             fontSize: '0.82rem',
                             color: '#64748b',
                             lineHeight: 1.55,
                             marginBottom: '0.35rem'
                           }}>
-                            {doc.especialidad}
+                            {doc.descripcion_profesional || doc.especialidad}
                           </div>
                         )}
                         {doc.email && (
@@ -570,9 +567,9 @@ export const ProgramDetailModal = ({ program: initialProgram, onClose, onApply }
           background: '#ffffff',
           borderRadius: '0 0 12px 12px'
         }}>
-          {prog.enlace_convocatoria_drive ? (
+          {prog.folleto || prog.enlace_convocatoria_drive ? (
             <a
-              href={prog.enlace_convocatoria_drive}
+              href={prog.folleto || prog.enlace_convocatoria_drive}
               target="_blank"
               rel="noreferrer"
               style={{
@@ -599,7 +596,7 @@ export const ProgramDetailModal = ({ program: initialProgram, onClose, onApply }
               }}
             >
               <Download size={16} />
-              <span>Descargar Convocatoria</span>
+              <span>Descargar folleto o convocatoria</span>
             </a>
           ) : (
             <span style={{ fontSize: '0.82rem', color: '#94a3b8' }}>

@@ -14,13 +14,17 @@ class DefensaTesisResource extends JsonResource
             'id_defensa' => $this->id_defensa,
             'id_edicion' => $this->id_edicion,
             'titulo_tesis' => $this->titulo_tesis,
+            'nombre_defensa' => $this->nombre_defensa,
+            'imagen_url' => $this->imagen_url,
             'autor' => $this->autor,
             'tutor' => $this->tutor,
+            'modalidad' => $this->modalidad,
             'fecha_defensa' => $this->fecha_defensa ? (is_string($this->fecha_defensa) ? $this->fecha_defensa : $this->fecha_defensa->format('Y-m-d')) : null,
             'hora_defensa' => $this->hora_defensa,
             'lugar' => $this->lugar ?? $this->lugar_defensa,
             'resultado' => $this->resultado ?? 'pendiente',
             'observaciones' => $this->observaciones,
+            'publicado' => $this->publicado,
             'edicion' => $this->whenLoaded('edicion', function () {
                 return [
                     'id' => $this->edicion->id_edicion,
@@ -36,4 +40,3 @@ class DefensaTesisResource extends JsonResource
         ];
     }
 }
-

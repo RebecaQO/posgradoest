@@ -33,11 +33,14 @@ frontend/.git/
 .DS_Store
 Thumbs.db
 desktop.ini
+.env
+.env.*
+!.env.example
 .vscode/
 .idea/
 *.swp
 *.log
 docker-compose.override.yml
 
-# Database dumps contain private application data
-respaldos/*.dump
+# Database and file backups contain private application data
+respaldos/*

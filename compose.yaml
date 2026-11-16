@@ -1,4 +1,81 @@
-include:
-  - path: backend/compose.yaml
-    project_directory: backend
-    env_file: backend/.env
+services:
+  app:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: portal-postgrado-api:latest
+    restart: unless-stopped
+    expose:
+      - "8080"
+    networks:
+      - dokploy-network
+      - backend-network
+    environment:
+      APP_NAME: ${APP_NAME:-Portal Postgrado Estadistica UMSA}
+      APP_ENV: production
+      APP_KEY: ${APP_KEY:?Define APP_KEY en Dokploy o en .env}
+      APP_DEBUG: "false"
+      APP_URL: ${APP_URL:?Define APP_URL en Dokploy o en .env}
+      FRONTEND_URL: ${FRONTEND_URL:?Define FRONTEND_URL en Dokploy o en .env}
+      SANCTUM_STATEFUL_DOMAINS: ${SANCTUM_STATEFUL_DOMAINS:-}
+      DB_CONNECTION: pgsql
+      DB_HOST: db
+      DB_PORT: "5432"
+      DB_DATABASE: ${DB_DATABASE:-portal}
+      DB_USERNAME: ${DB_USERNAME:-portal}
+      DB_PASSWORD: ${DB_PASSWORD:?Define DB_PASSWORD en Dokploy o en .env}
+      SESSION_DRIVER: file
+      CACHE_STORE: file
+      QUEUE_CONNECTION: sync
+      TZ: America/La_Paz
+      AUTORUN_ENABLED: "true"
+      AUTORUN_LARAVEL_MIGRATION: "true"
+      AUTORUN_LARAVEL_MIGRATION_FORCE: "true"
+      HEALTHCHECK_PATH: /up
+    volumes:
+      - ./files/storage:/var/www/html/storage/app/public
+      - app_cache:/var/www/html/storage/framework/cache/data
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: ${VITE_API_URL:?Define VITE_API_URL en Dokploy o en .env}
+    image: portal-postgrado-frontend:latest
+    restart: unless-stopped
+    expose:
+      - "80"
+    networks:
+      - dokploy-network
+
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    networks:
+      - backend-network
+    environment:
+      POSTGRES_DB: ${DB_DATABASE:-portal}
+      POSTGRES_USER: ${DB_USERNAME:-portal}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Define DB_PASSWORD en Dokploy o en .env}
+      TZ: America/La_Paz
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+networks:
+  dokploy-network:
+    external: true
+  backend-network:
+    internal: true
+
+volumes:
+  db_data:
+  app_cache:

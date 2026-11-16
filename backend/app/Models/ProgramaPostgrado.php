@@ -25,12 +25,16 @@ class ProgramaPostgrado extends Model
         'perfil_aspirante',
         'perfil_egreso',
         'enlace_pdf_programa',
+        'informacion_documentada',
         'activo',
+        'promocionado',
     ];
 
     protected $casts = [
         'id_programa' => 'integer',
         'activo' => 'boolean',
+        'promocionado' => 'boolean',
+        'informacion_documentada' => 'array',
     ];
 
     protected $appends = [

@@ -30,6 +30,9 @@ import cardDataMining from '../../assets/images/banner/card_diplomado_data_minin
 const CARD_IMAGES = [slide1, slide2, slide3, slide4];
 
 const getProgramCardBanner = (prog, idx) => {
+  const dynamicBanner = prog?.banner || prog?.ediciones?.[0]?.banner;
+  if (dynamicBanner) return dynamicBanner;
+
   const id = prog?.id || '';
   const title = (prog?.title || '').toLowerCase();
 
@@ -41,9 +44,6 @@ const getProgramCardBanner = (prog, idx) => {
   }
   if (id === 'PG-EST-003' || title.includes('mining') || title.includes('métodos') || title.includes('metodos')) {
     return cardDataMining;
-  }
-  if (prog?.banner) {
-    return prog.banner;
   }
   return CARD_IMAGES[idx % CARD_IMAGES.length];
 };
@@ -228,12 +228,13 @@ export const ProgramsView = ({ onNavigateToAdmission, initialFilter = null, onSe
 
   const renderProgramCard = (prog, idx, isSuggested = false) => {
     const cardImg = getProgramCardBanner(prog, idx);
+    const formularioInscripcion = prog.enlace_formulario_inscripcion || prog.ediciones?.find((edicion) => edicion.formulario)?.formulario;
     const isMaster = (prog.type || '').toLowerCase().includes('maestr') ||
       prog.typeFilter === 'maestria' ||
       prog.typeFilter === 'terminal' ||
       prog.typeFilter === 'autofinanciada' ||
       (prog.title || '').toLowerCase().includes('maestr');
-    const categoryLabel = isMaster ? 'PROGRAMA DE MAESTRÍA (M.SC.)' : 'DIPLOMADO DE ESPECIALIZACIÓN';
+    const categoryLabel = isMaster ? 'PROGRAMA DE MAESTRÍA' : 'DIPLOMADO DE ESPECIALIZACIÓN';
     const themeColor = isMaster ? '#1e5f35' : '#1e3a5f';
 
     return (
@@ -351,7 +352,7 @@ export const ProgramsView = ({ onNavigateToAdmission, initialFilter = null, onSe
             </h3>
 
             {/* Modalidad del programa */}
-            <div style={{
+            {prog.modality && <div style={{
               display: 'flex',
               alignItems: 'center',
               gap: '0.45rem',
@@ -361,8 +362,8 @@ export const ProgramsView = ({ onNavigateToAdmission, initialFilter = null, onSe
               marginBottom: '0.9rem'
             }}>
               <Layers size={15} color={themeColor} style={{ flexShrink: 0 }} />
-              <span>Modalidad: {prog.modality || 'Híbrida'}</span>
-            </div>
+              <span>Modalidad: {prog.modality}</span>
+            </div>}
 
             {/* Descripción resumida */}
             <p style={{
@@ -424,7 +425,7 @@ export const ProgramsView = ({ onNavigateToAdmission, initialFilter = null, onSe
         {/* ── Acciones de la Tarjeta con Botón de Postular ── */}
         <div style={{
           display: 'grid',
-          gridTemplateColumns: '1fr 1fr auto',
+          gridTemplateColumns: formularioInscripcion ? '1fr 1fr auto' : '1fr auto',
           gap: '0.55rem',
           padding: '1rem 1.4rem 1.25rem',
           borderTop: '1px solid #f1f5f9',
@@ -453,8 +454,8 @@ export const ProgramsView = ({ onNavigateToAdmission, initialFilter = null, onSe
           </a>
 
           {/* Botón de Postular con tono institucional #1e5f35 */}
-          <a
-            href={prog.enlace_formulario_inscripcion || 'https://docs.google.com/forms/d/e/1FAIpQLSd_posgrado_estadistica_umsa_postulacion_2026/viewform'}
+          {formularioInscripcion && <a
+            href={formularioInscripcion}
             target="_blank"
             rel="noreferrer"
             className="btn btn-sm"
@@ -485,7 +486,7 @@ export const ProgramsView = ({ onNavigateToAdmission, initialFilter = null, onSe
           >
             <span>Postular</span>
             <ArrowRight size={13} />
-          </a>
+          </a>}
 
           {/* WhatsApp directo */}
           <a

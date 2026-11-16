@@ -1,5 +1,6 @@
 @import './variables.css';
 @import './structural-system.css';
+@import './institutional-roster.css';
 
 /* Reset and Box Sizing */
 *, *::before, *::after {

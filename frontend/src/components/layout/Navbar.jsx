@@ -1,17 +1,18 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import logoPosgrado from '../../assets/images/logo/logo_posgrado.jpg';
 import { useAuth } from '../../context/AuthContext';
-import { 
-  GraduationCap, 
-  Menu, 
-  X, 
-  User, 
-  LogOut, 
-  ChevronDown, 
-  BookOpen, 
-  FileText, 
-  CheckCircle2, 
-  MapPin, 
+import { programaService } from '../../services/programaService';
+import {
+  GraduationCap,
+  Menu,
+  X,
+  User,
+  LogOut,
+  ChevronDown,
+  BookOpen,
+  FileText,
+  CheckCircle2,
+  MapPin,
   Newspaper,
   LayoutDashboard
 } from 'lucide-react';
@@ -20,14 +21,25 @@ export const Navbar = ({ currentTab, setCurrentTab, onOpenProgramDetail }) => {
   const { currentUser, logout, setLoginModalOpen } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [programsDropdownOpen, setProgramsDropdownOpen] = useState(false);
+  const [dbPrograms, setDbPrograms] = useState([]);
+
+  useEffect(() => {
+    let mounted = true;
+    programaService.getActivos().then((data) => {
+      if (mounted && Array.isArray(data)) {
+        setDbPrograms(data);
+      }
+    }).catch(() => { });
+    return () => { mounted = false; };
+  }, []);
 
   const navItems = [
     { id: 'inicio', label: 'Inicio' },
     { id: 'institucion', label: 'Nuestra Institución' },
-    { 
-      id: 'programas', 
+    {
+      id: 'programas',
       label: 'Programas Académicos',
-      hasDropdown: true 
+      hasDropdown: true
     },
     { id: 'normativa', label: 'Convocatorias Anteriores' },
     { id: 'noticias', label: 'Noticias y Tesis' },
@@ -59,7 +71,7 @@ export const Navbar = ({ currentTab, setCurrentTab, onOpenProgramDetail }) => {
         height: '78px'
       }}>
         {/* Dual Brand / Logo */}
-        <div 
+        <div
           onClick={() => handleNavClick('inicio')}
           style={{
             display: 'flex',
@@ -70,9 +82,9 @@ export const Navbar = ({ currentTab, setCurrentTab, onOpenProgramDetail }) => {
           }}
         >
           {/* Real institutional logo */}
-          <img 
-            src={logoPosgrado} 
-            alt="Carrera de Estadística – Unidad de Posgrado UMSA" 
+          <img
+            src={logoPosgrado}
+            alt="Carrera de Estadística – Unidad de Posgrado UMSA"
             className="navbar-brand-logo"
             style={{
               width: '50px',
@@ -95,10 +107,10 @@ export const Navbar = ({ currentTab, setCurrentTab, onOpenProgramDetail }) => {
         }} className="desktop-nav-container">
           {navItems.map((item) => {
             const isActive = currentTab === item.id;
-            
+
             if (item.hasDropdown) {
               return (
-                <div 
+                <div
                   key={item.id}
                   style={{ position: 'relative' }}
                   onMouseEnter={() => setProgramsDropdownOpen(true)}
@@ -132,7 +144,7 @@ export const Navbar = ({ currentTab, setCurrentTab, onOpenProgramDetail }) => {
                       position: 'absolute',
                       top: '100%',
                       left: 0,
-                      width: '290px',
+                      width: '320px',
                       background: '#ffffff',
                       border: '1px solid #e2e8f0',
                       borderRadius: 'var(--radius-md)',
@@ -141,7 +153,7 @@ export const Navbar = ({ currentTab, setCurrentTab, onOpenProgramDetail }) => {
                       zIndex: 200,
                       animation: 'fadeIn 0.2s ease-out'
                     }}>
-                      <div 
+                      <div
                         onClick={() => handleNavClick('programas')}
                         style={{
                           padding: '0.75rem 0.85rem',
@@ -162,62 +174,57 @@ export const Navbar = ({ currentTab, setCurrentTab, onOpenProgramDetail }) => {
                         <div>
                           <div>Todas las Convocatorias</div>
                           <div style={{ fontSize: '0.75rem', color: 'var(--color-text-subtle)', fontWeight: 400 }}>
-                            Ver catálogo completo 2026
+                            Ver catálogo completo
                           </div>
                         </div>
                       </div>
 
-                      <div 
-                        onClick={() => handleNavClick('programas')}
-                        style={{
-                          padding: '0.75rem 0.85rem',
-                          borderRadius: 'var(--radius-sm)',
-                          cursor: 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '0.6rem',
-                          color: 'var(--color-text-main)',
-                          fontSize: '0.875rem',
-                          fontWeight: 700,
-                          transition: 'background var(--transition-fast)'
-                        }}
-                        onMouseEnter={(e) => e.currentTarget.style.background = 'var(--color-accent-orange-subtle)'}
-                        onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
-                      >
-                        <GraduationCap size={16} color="#0284c7" />
-                        <div>
-                          <div>Maestrías Científicas</div>
-                          <div style={{ fontSize: '0.75rem', color: 'var(--color-text-subtle)', fontWeight: 400 }}>
-                            4 Semestres (M.Sc.)
+                      {/* Lista de Programas Reales de la Base de Datos */}
+                      {dbPrograms.length > 0 && (
+                        <div style={{ borderTop: '1px solid #f1f5f9', marginTop: '0.35rem', paddingTop: '0.35rem' }}>
+                          <div style={{ fontSize: '0.68rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '0.35rem 0.85rem 0.2rem' }}>
+                            Programas Vigentes en BD
                           </div>
+                          {dbPrograms.map((p) => {
+                            const isMsc = (p.type || p.tipo_programa || '').toLowerCase().includes('maestr');
+                            return (
+                              <div
+                                key={p.id_programa || p.id}
+                                onClick={() => {
+                                  setProgramsDropdownOpen(false);
+                                  setMobileMenuOpen(false);
+                                  if (onOpenProgramDetail) {
+                                    onOpenProgramDetail(p);
+                                  } else {
+                                    window.location.hash = `programa/${p.id_programa || p.id}`;
+                                  }
+                                }}
+                                style={{
+                                  padding: '0.6rem 0.85rem',
+                                  borderRadius: 'var(--radius-sm)',
+                                  cursor: 'pointer',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '0.6rem',
+                                  transition: 'background var(--transition-fast)',
+                                }}
+                                onMouseEnter={(e) => e.currentTarget.style.background = '#f8fafc'}
+                                onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                              >
+                                {isMsc ? <GraduationCap size={16} color="#059669" /> : <FileText size={16} color="#2563EB" />}
+                                <div style={{ minWidth: 0, flex: 1 }}>
+                                  <div style={{ fontSize: '0.825rem', fontWeight: 700, color: '#1e293b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                    {p.title || p.nombre_programa}
+                                  </div>
+                                  <div style={{ fontSize: '0.72rem', color: '#64748b' }}>
+                                    {p.type || (isMsc ? 'Maestría' : 'Diplomado')} · {p.ediciones?.[0]?.nombre_edicion || 'Edición Activa'}
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
                         </div>
-                      </div>
-
-                      <div 
-                        onClick={() => handleNavClick('programas')}
-                        style={{
-                          padding: '0.75rem 0.85rem',
-                          borderRadius: 'var(--radius-sm)',
-                          cursor: 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '0.6rem',
-                          color: 'var(--color-text-main)',
-                          fontSize: '0.875rem',
-                          fontWeight: 700,
-                          transition: 'background var(--transition-fast)'
-                        }}
-                        onMouseEnter={(e) => e.currentTarget.style.background = 'var(--color-accent-orange-subtle)'}
-                        onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
-                      >
-                        <FileText size={16} color="#d97706" />
-                        <div>
-                          <div>Diplomados de Posgrado</div>
-                          <div style={{ fontSize: '0.75rem', color: 'var(--color-text-subtle)', fontWeight: 400 }}>
-                            6 Meses Intensivos
-                          </div>
-                        </div>
-                      </div>
+                      )}
                     </div>
                   )}
                 </div>
@@ -301,7 +308,9 @@ export const Navbar = ({ currentTab, setCurrentTab, onOpenProgramDetail }) => {
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             className="mobile-nav-toggle"
-            aria-label="Abrir menú"
+            aria-label={mobileMenuOpen ? 'Cerrar menú' : 'Abrir menú'}
+            aria-expanded={mobileMenuOpen}
+            aria-controls="mobile-navigation-menu"
             style={{
               background: '#f1f5f9',
               border: '1px solid #cbd5e1',
@@ -323,7 +332,7 @@ export const Navbar = ({ currentTab, setCurrentTab, onOpenProgramDetail }) => {
 
       {/* Mobile Menu */}
       {mobileMenuOpen && (
-        <div style={{
+        <div id="mobile-navigation-menu" style={{
           background: '#ffffff',
           borderBottom: '2px solid #e2e8f0',
           padding: '1.25rem 1.25rem',

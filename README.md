@@ -15,39 +15,30 @@ Sistema integral web para la gestión, difusión y administración de programas 
 
 ## 🚀 Inicio Rápido de los Servicios
 
-Desde el entorno WSL2 en la raíz del proyecto (`~/proyectos/POS_EST`):
+Desde PowerShell en la raíz del repositorio:
 
 ### 1. Iniciar Contenedores (Sail / Docker Compose)
 ```bash
-cd ~/proyectos/POS_EST
-docker compose -p backend up -d
+docker compose -f compose.yaml -f compose.local.yaml up -d --build
 ```
-> **Nota:** El identificador `-p backend` mantiene la coherencia con Laravel Sail y evita colisiones de puertos o duplicación de volúmenes de base de datos.
 
 ### 2. Verificar Estado de los Contenedores
 ```bash
-docker compose -p backend ps
+docker compose -f compose.yaml -f compose.local.yaml ps
 ```
-Los tres servicios deben figurar en estado `Up`:
-- `backend-laravel.test-1`: API Backend en el puerto `80`.
-- `backend-pgsql-1`: Motor PostgreSQL 17 en el puerto `5432`.
-- `backend-frontend-1`: Servidor Vite Frontend en el puerto `5173`.
+Los servicios `app`, `frontend` y `db` deben estar activos; `app` y `db` deben figurar como saludables.
 
 ### 3. Direcciones de Acceso Local
-- 🌐 **Portal Web (Frontend):** [http://localhost:5173](http://localhost:5173)
-- 🔌 **API REST (Backend):** [http://localhost/api](http://localhost/api)
-- 🗄️ **PostgreSQL:** `localhost:5432` (`database: posgrado_umsa`, `user: portal`)
+- 🌐 **Portal Web (Frontend):** [http://localhost:3000](http://localhost:3000)
+- 🔌 **API REST (Backend):** [http://localhost:8080/api](http://localhost:8080/api)
+- 🩺 **Salud del backend:** [http://localhost:8080/up](http://localhost:8080/up)
+- 🗄️ **PostgreSQL:** red interna de Docker (`db:5432`); no se publica al host.
 
 ---
 
-## 🔑 Credenciales de Acceso
+## 🔐 Acceso
 
-El sistema cuenta con autenticación dual y flexible (soporta inicio de sesión mediante **nombre de usuario** o **correo electrónico**):
-
-| Rol | Usuario | Correo Electrónico | Contraseña | Permisos |
-|---|---|---|---|---|
-| **Administrador** | `admin` | `admin@umsa.bo` | `Admin1234!` | Acceso completo al Portal Administrativo y módulos |
-| **Usuario Regular**| `usuario` | `usuario@umsa.bo` | `Usuario1234!` | Acceso a consultas y perfil |
+El inicio de sesión acepta nombre de usuario o correo electrónico. El esquema de `usuarios` se crea con las migraciones al iniciar los contenedores, pero no se incluye una cuenta de prueba ni una contraseña predeterminada. Crea las cuentas con credenciales únicas y privadas para cada entorno.
 
 ---
 
@@ -89,13 +80,13 @@ cd ~/proyectos/POS_EST/backend
 ### Compilar Frontend para Producción
 ```bash
 cd ~/proyectos/POS_EST
-docker compose -p backend exec frontend npm run build
+docker compose -f compose.yaml -f compose.local.yaml exec frontend npm run build
 ```
 
 ### Detener los Servicios
 ```bash
 cd ~/proyectos/POS_EST
-docker compose -p backend down
+docker compose -f compose.yaml -f compose.local.yaml down
 ```
 
 ---

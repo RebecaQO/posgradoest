@@ -22,6 +22,9 @@ import cardDataMining from '../../assets/images/banner/card_diplomado_data_minin
 const CARD_IMAGES = [slide1, slide2, slide3, slide4];
 
 const getProgramCardBanner = (prog, idx) => {
+  const dynamicBanner = prog?.banner || prog?.ediciones?.[0]?.banner;
+  if (dynamicBanner) return dynamicBanner;
+
   const id = prog?.id || '';
   const title = (prog?.title || '').toLowerCase();
 
@@ -33,9 +36,6 @@ const getProgramCardBanner = (prog, idx) => {
   }
   if (id === 'PG-EST-003' || title.includes('mining') || title.includes('métodos') || title.includes('metodos')) {
     return cardDataMining;
-  }
-  if (prog?.banner) {
-    return prog.banner;
   }
   return CARD_IMAGES[idx % CARD_IMAGES.length];
 };
@@ -128,13 +128,13 @@ export const FeaturedPrograms = ({ onSelectProgram }) => {
         <div className="section-header" data-reveal>
           <div className="section-tag">
             <GraduationCap size={13} />
-            <span>Convocatorias Vigentes</span>
+            <span>Programas Académicos</span>
           </div>
           <h2 className="section-title">
             Programas <span className="highlight">Académicos Activos</span>
           </h2>
           <p className="section-subtitle">
-            Maestrías y Diplomados de la Facultad de Ciencias Puras y Naturales – UMSA con inscripciones abiertas.
+            Maestrías y Diplomados de la Facultad de Ciencias Puras y Naturales – UMSA.
           </p>
         </div>
 

@@ -53,7 +53,9 @@ export const EventsSection = ({ onNavigate }) => {
               >
                 {/* Event Header Banner */}
                 <div style={{
-                  background: 'linear-gradient(135deg, #1e3a5f 0%, #267342 100%)',
+                  background: def.imagen
+                    ? `linear-gradient(135deg, rgba(30,58,95,.82), rgba(38,115,66,.78)), url("${def.imagen}") center / cover`
+                    : 'linear-gradient(135deg, #1e3a5f 0%, #267342 100%)',
                   padding: '1.25rem 1.5rem',
                   color: '#ffffff',
                   display: 'flex',
@@ -67,7 +69,7 @@ export const EventsSection = ({ onNavigate }) => {
                     </span>
                   </div>
                   <span className="badge" style={{
-                    background: def.estado === 'Aprobada' ? 'rgba(38,115,66,0.9)' : 'rgba(234,88,12,0.9)',
+                    background: 'rgba(234,88,12,0.9)',
                     color: '#ffffff',
                     fontSize: '0.75rem',
                     fontWeight: 700,
@@ -85,7 +87,7 @@ export const EventsSection = ({ onNavigate }) => {
                     </div>
 
                     <h3 style={{ fontSize: '1.15rem', color: 'var(--color-umsa-blue-dark)', marginBottom: '1rem', lineHeight: 1.4, fontWeight: 800 }}>
-                      {def.titulo}
+                      {def.nombre}
                     </h3>
 
                     <div style={{
@@ -100,11 +102,15 @@ export const EventsSection = ({ onNavigate }) => {
                       border: '1px solid #e2e8f0'
                     }}>
                       <div>
+                        <strong style={{ color: 'var(--color-umsa-blue-dark)' }}>Tema:</strong> {def.titulo}
+                      </div>
+                      <div>
                         <strong style={{ color: 'var(--color-umsa-blue-dark)' }}>Postulante:</strong> {def.postulante}
                       </div>
                       <div>
                         <strong style={{ color: 'var(--color-umsa-blue-dark)' }}>Tutor / Director:</strong> {def.tutor}
                       </div>
+                      {def.modalidad && <div><strong style={{ color: 'var(--color-umsa-blue-dark)' }}>Modalidad:</strong> {def.modalidad}</div>}
                       {def.tribunal && (
                         <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>
                           <strong>Tribunal:</strong> {def.tribunal}

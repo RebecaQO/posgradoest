@@ -1,121 +1,48 @@
-# Guía de Despliegue y Arranque — POS_EST
+# Despliegue en Dokploy
 
-**Versión:** 0.9.0-rc  
-**Entorno Objetivo:** Docker Desktop con WSL2 (Ubuntu) / Servidor Linux con Docker Compose
+El repositorio contiene una API Laravel en `backend/` y un frontend React independiente en `frontend/`. El `compose.yaml` de la raíz construye imágenes Docker separadas para la API y la interfaz, y ejecuta PostgreSQL.
 
----
+## Variables de entorno
 
-## 1. Requisitos Previos
+En Dokploy, configura estas variables para el proyecto Compose. Para desarrollo local, copia `.env.example` a `.env` y reemplaza los valores de ejemplo.
 
-- **Sistema Operativo:** Linux (Ubuntu 22.04+) o Windows 11 con WSL2 (Ubuntu).
-- **Docker:** Docker Desktop v4.28+ o Docker Engine v24+ con plugin Docker Compose v2+.
-- **Git:** v2.34+
-- **Puertos Libres Requeridos:**
-  - `80` (Backend API HTTP / Nginx Sail)
-  - `5173` (Frontend Vite Dev Server)
-  - `5432` (PostgreSQL Database)
+- `APP_KEY`: clave Laravel segura, con prefijo `base64:`.
+- `APP_URL`: URL pública del backend.
+- `FRONTEND_URL`: URL pública del frontend.
+- `VITE_API_URL`: URL pública del backend; queda incluida en el frontend durante la construcción.
+- `SANCTUM_STATEFUL_DOMAINS`: dominio del frontend, sin `https://`.
+- `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD`: credenciales de PostgreSQL. Usa una contraseña larga y única.
 
----
-
-## 2. Clonado y Configuración del Entorno
-
-### 2.1 Clonar el repositorio
-```bash
-git clone <URL_DEL_REPOSITORIO> POS_EST
-cd POS_EST
-```
-
-### 2.2 Configuración de Variables de Entorno (Backend)
-```bash
-cp backend/.env.example backend/.env
-```
-
-Asegurar las siguientes configuraciones esenciales en `backend/.env`:
-```ini
-APP_NAME="Portal Posgrado Estadistica"
-APP_ENV=local
-APP_KEY=
-APP_DEBUG=true
-APP_URL=http://localhost
-
-FRONTEND_URL=http://localhost:5173
-SANCTUM_STATEFUL_DOMAINS=localhost:5173
-
-DB_CONNECTION=pgsql
-DB_HOST=pgsql
-DB_PORT=5432
-DB_DATABASE=portal
-DB_USERNAME=portal
-DB_PASSWORD=secret
-```
-
-### 2.3 Configuración de Variables de Entorno (Frontend)
-En `frontend/`, crear o verificar `.env`:
-```ini
-VITE_API_URL=http://localhost/api
-```
-
----
-
-## 3. Despliegue con Docker Compose (Laravel Sail)
-
-### 3.1 Levantar los Contenedores
-Desde el directorio `backend/`:
-```bash
-cd backend
-./vendor/bin/sail up -d
-```
-> *Nota:* La primera ejecución descargará las imágenes de PHP 8.3, PostgreSQL 16 y Node.js.
-
-### 3.2 Verificar Estado de Salud
-```bash
-./vendor/bin/sail ps
-```
-Asegurarse de que los 3 contenedores muestren estado `Up`:
-- `backend-laravel.test-1` (Puerto 80)
-- `backend-pgsql-1` (Puerto 5432, `healthy`)
-- `backend-frontend-1` (Puerto 5173)
-
-### 3.3 Inicialización de la Aplicación
-Ejecutar dentro del contenedor backend:
-```bash
-# Generar clave de aplicación (si no está generada)
-./vendor/bin/sail artisan key:generate
-
-# Ejecutar migraciones de la base de datos
-./vendor/bin/sail artisan migrate --force
-
-# (Opcional) Poblar base de datos inicial
-./vendor/bin/sail artisan db:seed --force
-```
-
----
-
-## 4. Verificación de Funcionamiento
-
-1. **Frontend:** Abrir en el navegador [http://localhost:5173](http://localhost:5173)
-2. **Backend Health:** Abrir [http://localhost/api/programas/activos](http://localhost/api/programas/activos) (debe devolver JSON `{"success":true,"data":[...]}`)
-3. **Panel Administrativo:** Ingresar con el usuario administrador en el portal:
-   - **Usuario:** `admin`
-   - **Contraseña:** `Admin1234!`
-
----
-
-## 5. Mantenimiento y Comandos Útiles
+Puedes generar una clave Laravel sin instalar PHP en el equipo:
 
 ```bash
-# Ver logs en tiempo real
-./vendor/bin/sail logs -f
-
-# Acceder a la consola de Laravel (Tinker)
-./vendor/bin/sail artisan tinker
-
-# Reiniciar servicios
-./vendor/bin/sail restart
-
-# Detener los contenedores preservando datos
-./vendor/bin/sail down
-
-# Respaldo rápido de PostgreSQL
-./vendor/bin/sail exec pgsql pg_dump -U portal portal > respaldo_$(date +%Y%m%d).sql
+docker run --rm serversideup/php:8.5-cli php -r "echo 'base64:'.base64_encode(random_bytes(32)).PHP_EOL;"
 ```
+
+Copia el resultado en `APP_KEY`. No publiques el archivo `.env` ni subas credenciales reales al repositorio.
+
+## Dokploy
+
+1. Crea una aplicación Compose desde este repositorio y usa la raíz como directorio.
+2. Define las variables anteriores en la sección de entorno de Dokploy.
+3. Configura el dominio del servicio `frontend` en el puerto interno `80` y el dominio del servicio `app` en el puerto interno `8080`.
+4. Verifica que exista la red externa `dokploy-network` en el servidor Dokploy.
+5. Despliega. Compose construye `backend/Dockerfile`; al iniciar, la imagen ejecuta las migraciones Laravel.
+
+PostgreSQL no publica puertos al exterior y guarda sus datos en el volumen `db_data`. Los archivos públicos subidos por usuarios se conservan en `files/storage`.
+
+## Frontend
+
+El servicio `frontend` usa Nginx para servir la compilación React. `VITE_API_URL` debe apuntar al dominio público del backend. La URL del frontend debe coincidir con `FRONTEND_URL` y el dominio incluido en `SANCTUM_STATEFUL_DOMAINS`.
+
+## Construir y levantar las imágenes localmente
+
+Con Docker instalado, desde la raíz del repositorio:
+
+```bash
+docker compose -f compose.yaml -f compose.local.yaml up -d --build
+```
+
+Compose construye las imágenes independientes `portal-postgrado-api:latest` y `portal-postgrado-frontend:latest`. El portal queda en `http://localhost:3000` y la API en `http://localhost:8080` (`/up` para comprobar salud).
+
+Para consultar registros localmente, ejecuta `docker compose -f compose.yaml -f compose.local.yaml logs -f app frontend`. En Dokploy, usa los logs del servicio `app`. La API expone la comprobación de salud Laravel en `/up`.

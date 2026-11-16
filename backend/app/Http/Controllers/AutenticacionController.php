@@ -3,9 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Usuario;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\ValidationException;
 
 class AutenticacionController extends Controller
 {
@@ -13,19 +13,20 @@ class AutenticacionController extends Controller
     // INICIAR SESION
     // ==========================================
 
-    public function loginApi(Request $request)
+    public function loginApi(Request $request): JsonResponse
     {
-        // Validar que se reciba password y al menos nombre o email.
         $datos = $request->validate([
-            'password' => ['required', 'string'],
+            'nombre' => ['nullable', 'string', 'max:255'],
+            'email' => ['nullable', 'string', 'max:255'],
+            'password' => ['required', 'string', 'max:255'],
         ]);
 
-        $identifier = $request->input('nombre') ?? $request->input('email');
+        $identifier = trim((string) ($datos['nombre'] ?? '')) ?: trim((string) ($datos['email'] ?? ''));
         if (empty($identifier)) {
             return response()->json([
-                'message' => 'The nombre or email field is required.',
+                'message' => 'Ingresa tu usuario o correo y contraseña.',
                 'errors' => [
-                    'nombre' => ['The nombre field is required when email is not present.'],
+                    'nombre' => ['El usuario o correo es obligatorio.'],
                 ],
             ], 422);
         }
@@ -36,13 +37,7 @@ class AutenticacionController extends Controller
             ->first();
 
         // Comprobar usuario y contraseña.
-        if (
-            !$usuario ||
-            !Hash::check(
-                $datos['password'],
-                $usuario->password
-            )
-        ) {
+        if (! $usuario || ! $usuario->activo || ! Hash::check($datos['password'], $usuario->password)) {
             return response()->json([
                 'success' => false,
                 'message' => 'Credenciales incorrectas.',
@@ -50,7 +45,7 @@ class AutenticacionController extends Controller
         }
 
         // Aceptar solamente los roles existentes.
-        if (!in_array(
+        if (! in_array(
             $usuario->rol,
             ['admin', 'usuario'],
             true

@@ -1,27 +1,46 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  X, 
-  MessageCircle, 
-  ChevronLeft, 
+import {
+  X,
+  MessageCircle,
+  ChevronLeft,
   ChevronRight,
   GraduationCap
 } from 'lucide-react';
 
-import bannerCiencia from '../../assets/images/banner/banner_ciencia.jpeg';
 import cienciaBanner from '../../assets/images/banner/banner_maestria_datos.png';
+import { programaService } from '../../services/programaService';
 
 export const MasterBannerPopup = ({ onNavigateToProgram }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [activeSlide, setActiveSlide] = useState(0);
+  const [databaseBanner, setDatabaseBanner] = useState(null);
+
+  const [targetProgramId, setTargetProgramId] = useState(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    programaService.getActivos().then((data) => {
+      const list = Array.isArray(data) ? data : [];
+      const maestria = list.find(p => (p.type || p.tipo_programa || '').toLowerCase().includes('maestr')) || list[0];
+      if (!maestria) return;
+      const progId = maestria.id_programa ?? maestria.id;
+      if (isMounted) {
+        setTargetProgramId(progId);
+        const edicionActiva = maestria.ediciones?.find((edicion) => ['Abierta', 'En Curso', 'En Proceso'].includes(edicion.estado))
+          ?? maestria.ediciones?.[0];
+        const banner = maestria.banner || edicionActiva?.banner;
+        if (banner) setDatabaseBanner(banner);
+      }
+    }).catch((error) => {
+      console.error('Error cargando banner de la maestría desde la base de datos:', error);
+    });
+    return () => { isMounted = false; };
+  }, []);
 
   const banners = [
     {
-      img: cienciaBanner,
-      alt: 'Maestría en Ciencia y Análisis de Datos - Versión Informativa'
-    },
-    {
-      img: bannerCiencia,
-      alt: 'Maestría en Ciencia y Análisis de Datos - Afiche Convocatoria Oficial UMSA'
+      img: databaseBanner || cienciaBanner,
+      alt: 'Banner informativo de la Maestría en Ciencia y Análisis de Datos'
     }
   ];
 
@@ -43,10 +62,11 @@ export const MasterBannerPopup = ({ onNavigateToProgram }) => {
 
   const handleGoToProgram = () => {
     handleClose();
+    const pid = targetProgramId || 2;
     if (onNavigateToProgram) {
-      onNavigateToProgram('PG-EST-002');
+      onNavigateToProgram(pid);
     } else {
-      window.location.hash = 'programa/PG-EST-002';
+      window.location.hash = `programa/${pid}`;
     }
   };
 
@@ -61,7 +81,7 @@ export const MasterBannerPopup = ({ onNavigateToProgram }) => {
   };
 
   const whatsappUrl = `https://wa.me/59176543210?text=${encodeURIComponent(
-    'Hola, deseo información y requisitos sobre la Maestría en Ciencia y Análisis de Datos (II Versión).'
+    'Hola, deseo información sobre la Maestría en Ciencia y Análisis de Datos, II versión 2025–2026, actualmente en curso.'
   )}`;
 
   return (
@@ -307,12 +327,14 @@ export const MasterBannerPopup = ({ onNavigateToProgram }) => {
 
       {/* ── BOTÓN FLOTANTE DISCRETO PARA REABRIR PUBLICIDAD ── */}
       <button
+        className="master-banner-floating-cta"
         onClick={() => setIsOpen(true)}
         title="Ver afiche de la Maestría"
+        aria-label="Ver convocatoria de maestría"
         style={{
           position: 'fixed',
-          bottom: '24px',
-          left: '24px',
+          bottom: 'calc(24px + env(safe-area-inset-bottom))',
+          left: 'calc(24px + env(safe-area-inset-left))',
           zIndex: 85,
           background: '#006400',
           color: '#FFFFFF',
@@ -344,6 +366,17 @@ export const MasterBannerPopup = ({ onNavigateToProgram }) => {
       </button>
 
       <style>{`
+        @media (max-width: 639px) {
+          .master-banner-floating-cta {
+            width: 48px;
+            height: 48px;
+            justify-content: center;
+            padding: 0 !important;
+            bottom: calc(16px + env(safe-area-inset-bottom)) !important;
+            left: calc(16px + env(safe-area-inset-left)) !important;
+          }
+          .master-banner-floating-cta > span { display: none; }
+        }
         @keyframes fadeIn {
           from { opacity: 0; }
           to { opacity: 1; }

@@ -118,28 +118,58 @@ export const authoritiesData = [
 
 export const institutionTimeline = [
   {
+    year: "Segunda mitad de los años 60",
+    title: "La Estadística llega a la Carrera de Economía",
+    desc: "La Estadística se incorpora como mención dentro de la Carrera de Economía."
+  },
+  {
     year: "1972",
-    title: "Creación de la Licenciatura en Estadística",
-    desc: "Fundación en el seno de la Facultad de Ciencias Puras y Naturales de la UMSA para atender la necesidad nacional de formación cuantitativa y científica."
+    title: "Nace la especialidad de Estadística",
+    desc: "Tras la reapertura de la Universidad y la creación de la FCPN, la especialidad se organiza en Matemática con un plan cercano al de Informática. Comienza con pocos estudiantes y docentes, varios recién egresados de maestrías en el exterior."
   },
   {
-    year: "1998",
-    title: "Primeros Programas de Especialización y Posgrado",
-    desc: "Aprobación de los primeros diplomados en Métodos Estadísticos y Muestreo con apoyo de organismos internacionales."
+    year: "1975",
+    title: "Un plan de estudios para la licenciatura",
+    desc: "Tras resolver gradualmente las dificultades iniciales de recursos, se estructura un plan de estudios acorde con las necesidades de la licenciatura."
   },
   {
-    year: "2014",
-    title: "Acreditación Nacional ante el CEUB",
-    desc: "Obtención de la máxima acreditación académica del Comité Ejecutivo de la Universidad Boliviana por su excelencia académica y producción investigativa."
+    year: "1979",
+    title: "Se titula el primer profesional",
+    desc: "Con los primeros egresados, comienza una inserción laboral gradual en el INE y en la docencia universitaria."
   },
   {
-    year: "2020",
-    title: "Modernización Curricular & Ciencia de Datos",
-    desc: "Incorporación de programas de posgrado orientados a Big Data, Inteligencia Artificial, Bioestadística y computación de alto rendimiento."
+    year: "1984",
+    title: "La Carrera alcanza independencia",
+    desc: "Por resolución del IX Congreso Nacional de Universidades, Estadística se separa del Departamento de Matemática y comienza a funcionar de manera independiente."
   },
   {
-    year: "2026",
-    title: "Plataforma Digital de Excelencia de Cuarto Nivel",
-    desc: "Consolidación de las maestrías virtuales e híbridas con alcance nacional e internacional y acreditación continua."
+    year: "1985",
+    title: "Creación del IETA",
+    desc: "Se crea el Instituto de Estadística Teórica y Aplicada para apoyar la investigación. Su reglamento se aprobaría en 1994."
+  },
+  {
+    year: "1986",
+    title: "Un currículo más flexible",
+    desc: "El plan incorpora materias optativas para que los estudiantes profundicen en áreas como Administración, Biología, Economía, Informática y Sociología."
+  },
+  {
+    year: "Segunda mitad de los años 80",
+    title: "Aumenta la matrícula y crece el desafío de titulación",
+    desc: "La matrícula supera el centenar y fluctúa entre 90 y 120 estudiantes. Aumentan los egresados, pero no al mismo ritmo que los titulados."
+  },
+  {
+    year: "1994",
+    title: "Reglamento de funcionamiento",
+    desc: "El reglamento del Instituto de Estadística Teórica y Aplicada se aprueba mediante Resolución HCU Nº 082/94, el 7 de julio."
+  },
+  {
+    year: "1995–1997",
+    title: "Fortalecimiento de la biblioteca",
+    desc: "La biblioteca especializada amplía sus colecciones con ediciones actualizadas para estudiantes y docentes."
+  },
+  {
+    year: "Actualidad",
+    title: "Nuevas modalidades de graduación",
+    desc: "La Carrera trabaja para reducir la brecha de titulación con tesis y trabajo dirigido; la graduación por excelencia también forma parte de sus reglamentos."
   }
 ];

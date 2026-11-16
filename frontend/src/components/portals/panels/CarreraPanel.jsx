@@ -7,7 +7,6 @@ import {
   Clock,
   User,
   BookOpen,
-  Users,
   Save,
   CheckCircle2,
   AlertCircle,
@@ -25,8 +24,6 @@ export default function CarreraPanel() {
     horarios_atencion: '',
     director: '',
     campus_virtual_url: '',
-    descripcion_ieta: '',
-    descripcion_club: '',
   });
 
   const [loading, setLoading] = useState(true);
@@ -50,8 +47,6 @@ export default function CarreraPanel() {
         horarios_atencion: info.horarios_atencion || info.horario_atencion || '',
         director: info.director || info.director_nombre || '',
         campus_virtual_url: info.campus_virtual_url || '',
-        descripcion_ieta: info.descripcion_ieta || info.ieta_descripcion || '',
-        descripcion_club: info.descripcion_club || info.club_cientifico_descripcion || '',
       });
     } catch (err) {
       if (err.status === 403) {
@@ -101,8 +96,6 @@ export default function CarreraPanel() {
         horarios_atencion: info.horarios_atencion || info.horario_atencion || '',
         director: info.director || info.director_nombre || '',
         campus_virtual_url: info.campus_virtual_url || '',
-        descripcion_ieta: info.descripcion_ieta || info.ieta_descripcion || '',
-        descripcion_club: info.descripcion_club || info.club_cientifico_descripcion || '',
       });
       setSuccess('Información institucional actualizada exitosamente.');
       setTimeout(() => setSuccess(null), 4000);
@@ -132,10 +125,10 @@ export default function CarreraPanel() {
     <div className="animate-fade-in">
       <div style={{ marginBottom: '1.5rem' }}>
         <h3 style={{ fontSize: '1.35rem', color: 'var(--color-text-main)', fontWeight: 800, margin: 0 }}>
-          Información Institucional, Carrera & IETA
+          Información Institucional de la Carrera
         </h3>
         <p style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', margin: 0 }}>
-          Configuración oficial de direcciones, canales de contacto, IETA, Club Científico y campus virtual en PostgreSQL.
+          Configuración oficial de direcciones, canales de contacto y campus virtual en PostgreSQL.
         </p>
       </div>
 
@@ -327,45 +320,6 @@ export default function CarreraPanel() {
             )}
           </div>
 
-          {/* IETA */}
-          <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-            <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: 600 }}>
-              <BookOpen size={16} color="var(--color-green-inst)" />
-              <span>Instituto de Estadística Teórica y Aplicada (IETA)</span>
-            </label>
-            <textarea
-              rows={3}
-              value={form.descripcion_ieta}
-              onChange={(e) => handleChange('descripcion_ieta', e.target.value)}
-              className="form-textarea"
-              placeholder="Misión, líneas de investigación, consultoría estadística y desarrollo nacional del IETA..."
-            />
-            {fieldErrors.descripcion_ieta && (
-              <p style={{ color: '#ef4444', fontSize: '0.8rem', margin: '0.25rem 0 0' }}>
-                {fieldErrors.descripcion_ieta[0]}
-              </p>
-            )}
-          </div>
-
-          {/* Club Científico */}
-          <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-            <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: 600 }}>
-              <Users size={16} color="var(--color-green-inst)" />
-              <span>Sociedad Científica & Club de Ciencia de Datos</span>
-            </label>
-            <textarea
-              rows={3}
-              value={form.descripcion_club}
-              onChange={(e) => handleChange('descripcion_club', e.target.value)}
-              className="form-textarea"
-              placeholder="Actividades estudiantiles, datathons, semilleros y hackathons del club científico..."
-            />
-            {fieldErrors.descripcion_club && (
-              <p style={{ color: '#ef4444', fontSize: '0.8rem', margin: '0.25rem 0 0' }}>
-                {fieldErrors.descripcion_club[0]}
-              </p>
-            )}
-          </div>
         </div>
 
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', borderTop: '1px solid var(--color-border)', paddingTop: '1.5rem' }}>

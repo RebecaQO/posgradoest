@@ -8,6 +8,7 @@ export default function DefensasPanel() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [fieldErrors, setFieldErrors] = useState({});
+  const [subiendoBanner, setSubiendoBanner] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState(null);
 
@@ -17,13 +18,17 @@ export default function DefensasPanel() {
   const [form, setForm] = useState({
     id_edicion: '',
     titulo_tesis: '',
+    nombre_defensa: '',
+    imagen_url: '',
     autor: '',
     tutor: '',
+    modalidad: '',
     fecha_defensa: '',
     hora_defensa: '',
     lugar: '',
     resultado: 'pendiente',
     observaciones: '',
+    publicado: true,
   });
 
   const cargar = async () => {
@@ -57,13 +62,17 @@ export default function DefensasPanel() {
     setForm({
       id_edicion: ediciones[0]?.id_edicion || ediciones[0]?.id || '',
       titulo_tesis: '',
+      nombre_defensa: '',
+      imagen_url: '',
       autor: '',
       tutor: '',
+      modalidad: '',
       fecha_defensa: new Date().toISOString().split('T')[0],
       hora_defensa: '10:00',
       lugar: 'Auditorio de Postgrado - Carrera de Estadística',
       resultado: 'pendiente',
       observaciones: '',
+      publicado: true,
     });
     setFieldErrors({});
     setModalOpen(true);
@@ -74,13 +83,17 @@ export default function DefensasPanel() {
     setForm({
       id_edicion: def.id_edicion || def.edicion?.id || '',
       titulo_tesis: def.titulo_tesis || '',
+      nombre_defensa: def.nombre_defensa || `Defensa de ${def.autor || 'tesis'}`,
+      imagen_url: def.imagen_url || '',
       autor: def.autor || '',
       tutor: def.tutor || '',
+      modalidad: def.modalidad || '',
       fecha_defensa: def.fecha_defensa || '',
       hora_defensa: def.hora_defensa || '',
       lugar: def.lugar || '',
       resultado: def.resultado || 'pendiente',
       observaciones: def.observaciones || '',
+      publicado: def.publicado !== false,
     });
     setFieldErrors({});
     setModalOpen(true);
@@ -124,6 +137,26 @@ export default function DefensasPanel() {
       } else {
         setError(err.message || 'Error al guardar la defensa de tesis.');
       }
+    }
+  };
+
+  const subirBanner = async (archivo) => {
+    if (!archivo) return;
+    if (archivo.size > 5 * 1024 * 1024) {
+      setError('El banner debe pesar máximo 5 MB.');
+      return;
+    }
+    const body = new FormData();
+    body.append('archivo', archivo);
+    setError(null);
+    setSubiendoBanner(true);
+    try {
+      const resultado = await apiJson('/api/defensas/upload-banner', { method: 'POST', body });
+      setForm((actual) => ({ ...actual, imagen_url: resultado.url }));
+    } catch (err) {
+      setError(`No se pudo subir el banner: ${err.message}`);
+    } finally {
+      setSubiendoBanner(false);
     }
   };
 
@@ -240,13 +273,14 @@ export default function DefensasPanel() {
                 <th>Edición / Programa</th>
                 <th>Fecha y Hora</th>
                 <th>Resultado</th>
+                <th>Portal público</th>
                 <th>Acciones</th>
               </tr>
             </thead>
             <tbody>
               {defensasFiltradas.length === 0 ? (
                 <tr>
-                  <td colSpan="6" style={{ textAlign: 'center', padding: '2rem', color: 'var(--color-text-muted)' }}>
+                  <td colSpan="7" style={{ textAlign: 'center', padding: '2rem', color: 'var(--color-text-muted)' }}>
                     No se encontraron defensas de tesis registradas con los filtros actuales.
                   </td>
                 </tr>
@@ -254,12 +288,14 @@ export default function DefensasPanel() {
                 defensasFiltradas.map((def) => (
                   <tr key={def.id}>
                     <td>
-                      <strong>{def.titulo_tesis}</strong>
+                      <strong>{def.nombre_defensa || `Defensa de ${def.autor || 'tesis'}`}</strong>
+                      <div style={{ fontSize: '0.82rem', color: 'var(--color-text-muted)' }}>Tema: {def.titulo_tesis}</div>
                       {def.lugar && (
                         <div style={{ fontSize: '0.78rem', color: 'var(--color-text-muted)', display: 'flex', alignItems: 'center', gap: '0.25rem', marginTop: '0.25rem' }}>
                           <MapPin size={12} /> {def.lugar}
                         </div>
                       )}
+                      {def.modalidad && <div style={{ fontSize: '0.78rem', color: 'var(--color-text-muted)' }}>Modalidad: {def.modalidad}</div>}
                     </td>
                     <td>
                       <div><strong>{def.autor}</strong></div>
@@ -292,6 +328,7 @@ export default function DefensasPanel() {
                     <td>
                       {getBadgeResultado(def.resultado)}
                     </td>
+                    <td>{def.publicado ? 'Visible' : 'Oculta'}</td>
                     <td>
                       <div style={{ display: 'flex', gap: '0.4rem' }}>
                         <button
@@ -328,7 +365,7 @@ export default function DefensasPanel() {
         }}>
           <div style={{
             background: 'var(--color-bg-card, #ffffff)', padding: '2rem', borderRadius: '8px',
-            width: '100%', maxWidth: '540px', maxHeight: '90vh', overflowY: 'auto',
+            width: '100%', maxWidth: '680px', maxHeight: '90vh', overflowY: 'auto',
             boxShadow: '0 10px 25px rgba(0,0,0,0.3)'
           }}>
             <h4 style={{ margin: '0 0 1.25rem 0', color: 'var(--color-text-main)' }}>
@@ -363,7 +400,38 @@ export default function DefensasPanel() {
 
               <div style={{ marginBottom: '1rem' }}>
                 <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.35rem' }}>
-                  Título del Trabajo / Tesis *
+                  Banner o foto de la defensa
+                </label>
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  className="input-text"
+                  style={{ width: '100%' }}
+                  onChange={(e) => subirBanner(e.target.files?.[0])}
+                />
+                <small>JPG, PNG o WebP; máximo 5 MB.</small>
+                {form.imagen_url && <img src={form.imagen_url} alt="Vista previa del banner de la defensa" style={{ display: 'block', width: '100%', maxHeight: 180, objectFit: 'cover', borderRadius: 8, marginTop: 8 }} />}
+              </div>
+
+              <div style={{ marginBottom: '1rem' }}>
+                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.35rem' }}>
+                  Nombre de la defensa *
+                </label>
+                <input
+                  type="text"
+                  className="input-text"
+                  style={{ width: '100%' }}
+                  value={form.nombre_defensa}
+                  onChange={(e) => setForm({ ...form, nombre_defensa: e.target.value })}
+                  placeholder="Ej.: Defensa pública de tesis de maestría"
+                  required
+                />
+                {fieldErrors.nombre_defensa && <p style={{ color: '#ef4444', fontSize: '0.8rem', margin: '0.25rem 0 0' }}>{fieldErrors.nombre_defensa[0]}</p>}
+              </div>
+
+              <div style={{ marginBottom: '1rem' }}>
+                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.35rem' }}>
+                  Tema del Trabajo / Tesis *
                 </label>
                 <input
                   type="text"
@@ -381,10 +449,10 @@ export default function DefensasPanel() {
                 )}
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem', marginBottom: '1rem' }}>
                 <div>
                   <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.35rem' }}>
-                    Postgraduante / Autor *
+                    Tesista / Postgraduante *
                   </label>
                   <input
                     type="text"
@@ -403,7 +471,7 @@ export default function DefensasPanel() {
 
                 <div>
                   <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.35rem' }}>
-                    Tutor Académico
+                    Tutor
                   </label>
                   <input
                     type="text"
@@ -452,7 +520,7 @@ export default function DefensasPanel() {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
                 <div>
                   <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.35rem' }}>
-                    Lugar / Modalidad
+                    Lugar
                   </label>
                   <input
                     type="text"
@@ -460,25 +528,33 @@ export default function DefensasPanel() {
                     style={{ width: '100%' }}
                     value={form.lugar}
                     onChange={(e) => setForm({ ...form, lugar: e.target.value })}
-                    placeholder="Auditorio / Virtual Zoom"
+                    placeholder="Auditorio / enlace de videoconferencia"
                   />
                 </div>
 
                 <div>
                   <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.35rem' }}>
-                    Resultado / Estado *
+                    Modalidad de defensa
                   </label>
-                  <select
+                  <input
+                    type="text"
                     className="input-text"
                     style={{ width: '100%' }}
-                    value={form.resultado}
-                    onChange={(e) => setForm({ ...form, resultado: e.target.value })}
-                  >
-                    <option value="pendiente">Pendiente</option>
-                    <option value="aprobado">Aprobado</option>
-                    <option value="reprobado">Reprobado</option>
-                  </select>
+                    value={form.modalidad}
+                    onChange={(e) => setForm({ ...form, modalidad: e.target.value })}
+                    placeholder="Presencial / Virtual síncrona / Híbrida"
+                  />
                 </div>
+
+              </div>
+
+              <div style={{ marginBottom: '1rem' }}>
+                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.35rem' }}>Resultado / Estado *</label>
+                <select className="input-text" style={{ width: '100%' }} value={form.resultado} onChange={(e) => setForm({ ...form, resultado: e.target.value })}>
+                  <option value="pendiente">Pendiente</option>
+                  <option value="aprobado">Aprobado</option>
+                  <option value="reprobado">Reprobado</option>
+                </select>
               </div>
 
               <div style={{ marginBottom: '1rem' }}>
@@ -493,6 +569,11 @@ export default function DefensasPanel() {
                 />
               </div>
 
+              <label style={{ display: 'flex', alignItems: 'center', gap: '.5rem', marginBottom: '1rem' }}>
+                <input type="checkbox" checked={Boolean(form.publicado)} onChange={(e) => setForm({ ...form, publicado: e.target.checked })} />
+                Mostrar esta defensa en Noticias y Tesis del portal público
+              </label>
+
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1.5rem' }}>
                 <button
                   type="button"
@@ -501,8 +582,8 @@ export default function DefensasPanel() {
                 >
                   Cancelar
                 </button>
-                <button type="submit" className="btn btn-primary">
-                  {editing ? 'Actualizar' : 'Guardar Defensa'}
+                <button type="submit" className="btn btn-primary" disabled={subiendoBanner}>
+                  {subiendoBanner ? 'Subiendo banner…' : editing ? 'Actualizar' : 'Guardar Defensa'}
                 </button>
               </div>
             </form>

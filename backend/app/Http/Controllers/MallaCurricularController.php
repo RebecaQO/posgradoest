@@ -29,8 +29,8 @@ class MallaCurricularController extends Controller
     {
         $malla = MallaCurricular::with([
             'programa',
-            'modulos.materias.materia',
-            'materiasDiplomado.materia',
+            'modulos.materias.materia.docentes',
+            'materiasDiplomado.materia.docentes',
             'ediciones',
         ])->find($id);
 

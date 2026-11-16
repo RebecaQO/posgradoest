@@ -69,7 +69,7 @@ class MateriaController extends Controller
                 'max:150',
             ],
             'descripcion' => [
-                'required',
+                'nullable',
                 'string',
             ],
             'tipo' => [
@@ -316,10 +316,35 @@ class MateriaController extends Controller
             ],
             'descripcion' => [
                 'sometimes',
-                'required',
+                'nullable',
                 'string',
             ],
+            'creditos' => ['sometimes', 'required', 'integer', 'min:1'],
+            'id_mod' => [Rule::requiredIf($request->has('creditos') && !$request->has('id_malla')), 'prohibited_with:id_malla', 'integer', 'exists:modulo,id_mod'],
+            'id_malla' => [Rule::requiredIf($request->has('creditos') && !$request->has('id_mod')), 'prohibited_with:id_mod', 'integer', 'exists:malla_curricular,id_malla'],
         ]);
+
+        $creditos = $datos['creditos'] ?? null;
+        $idModulo = $datos['id_mod'] ?? null;
+        $idMalla = $datos['id_malla'] ?? null;
+        unset($datos['creditos'], $datos['id_mod'], $datos['id_malla']);
+
+        if ($creditos !== null) {
+            $tabla = $idModulo ? 'compone' : 'integra';
+            $columna = $tabla === 'compone' ? 'id_mod' : 'id_malla';
+            $idDestino = $idModulo ?? $idMalla;
+            $actualizados = DB::table($tabla)
+                ->where('id_mat', $materia->id_mat)
+                ->where($columna, $idDestino)
+                ->update(['creditos' => $creditos]);
+
+            if ($actualizados === 0) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No se encontró la asignación curricular de esta materia.',
+                ], 422);
+            }
+        }
 
         $materia->update($datos);
 
@@ -327,6 +352,31 @@ class MateriaController extends Controller
             'success' => true,
             'message' => 'Materia actualizada correctamente.',
             'data' => $materia->fresh(),
+        ], 200);
+    }
+
+    public function actualizarDocentes(Request $request, int $id)
+    {
+        $materia = Materia::find($id);
+
+        if (!$materia) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Materia no encontrada.',
+            ], 404);
+        }
+
+        $datos = $request->validate([
+            'id_docentes' => ['present', 'array'],
+            'id_docentes.*' => ['integer', Rule::exists('docente', 'id_doc')->where('activo', true)],
+        ]);
+
+        $materia->docentes()->sync($datos['id_docentes']);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Docentes de la materia actualizados correctamente.',
+            'data' => $materia->load('docentes'),
         ], 200);
     }
 

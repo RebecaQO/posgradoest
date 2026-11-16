@@ -13,6 +13,35 @@ use Illuminate\Http\Response;
 
 class DefensaTesisController extends Controller
 {
+    public function publicas(): JsonResponse
+    {
+        $defensas = DefensaTesis::query()
+            ->with(['edicion.programa'])
+            ->where('publicado', true)
+            ->orderByDesc('fecha_defensa')
+            ->orderByDesc('hora_defensa')
+            ->get()
+            ->map(fn (DefensaTesis $defensa): array => [
+                'id' => $defensa->id_defensa,
+                'titulo_tesis' => $defensa->titulo_tesis,
+                'nombre_defensa' => $defensa->nombre_defensa,
+                'imagen_url' => $defensa->imagen_url ?? $defensa->edicion?->banner,
+                'autor' => $defensa->autor,
+                'tutor' => $defensa->tutor,
+                'fecha_defensa' => $defensa->fecha_defensa?->format('Y-m-d'),
+                'hora_defensa' => $defensa->hora_defensa,
+                'lugar' => $defensa->lugar ?? $defensa->lugar_defensa,
+                'modalidad' => $defensa->modalidad ?? $defensa->edicion?->modalidad_titulacion,
+                'imagen' => $defensa->edicion?->banner,
+                'edicion' => [
+                    'nombre_edicion' => $defensa->edicion?->nombre_edicion,
+                    'programa' => $defensa->edicion?->programa?->nombre_programa,
+                ],
+            ]);
+
+        return response()->json(['success' => true, 'data' => $defensas]);
+    }
+
     public function index(Request $request): AnonymousResourceCollection
     {
         $query = DefensaTesis::with(['edicion.programa'])->orderBy('id_defensa', 'desc');
@@ -26,6 +55,7 @@ class DefensaTesisController extends Controller
         }
 
         $defensas = $query->paginate(20);
+
         return DefensaTesisResource::collection($defensas);
     }
 
@@ -38,12 +68,14 @@ class DefensaTesisController extends Controller
         if (in_array($res, ['reprobado', 'reprobada', 'rechazado', 'rechazada'])) {
             return 'Rechazada';
         }
+
         return 'Pendiente';
     }
 
     public function store(StoreDefensaTesisRequest $request): JsonResponse
     {
         $datos = $request->validated();
+        $datos['publicado'] = $datos['publicado'] ?? true;
         if (isset($datos['lugar'])) {
             $datos['lugar_defensa'] = $datos['lugar'];
         }
@@ -60,16 +92,17 @@ class DefensaTesisController extends Controller
     public function show(int $id): DefensaTesisResource|JsonResponse
     {
         $defensa = DefensaTesis::with(['edicion.programa'])->find($id);
-        if (!$defensa) {
+        if (! $defensa) {
             return response()->json(['message' => 'Defensa no encontrada'], 404);
         }
+
         return new DefensaTesisResource($defensa);
     }
 
     public function update(StoreDefensaTesisRequest $request, int $id): DefensaTesisResource|JsonResponse
     {
         $defensa = DefensaTesis::find($id);
-        if (!$defensa) {
+        if (! $defensa) {
             return response()->json(['message' => 'Defensa no encontrada'], 404);
         }
 
@@ -90,7 +123,7 @@ class DefensaTesisController extends Controller
     public function destroy(int $id): Response|JsonResponse
     {
         $defensa = DefensaTesis::find($id);
-        if (!$defensa) {
+        if (! $defensa) {
             return response()->json(['message' => 'Defensa no encontrada'], 404);
         }
 
@@ -99,4 +132,3 @@ class DefensaTesisController extends Controller
         return response()->noContent();
     }
 }
-

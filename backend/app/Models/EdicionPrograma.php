@@ -33,6 +33,8 @@ class EdicionPrograma extends Model
         'requisitos',
         'convocatoria',
         'formulario',
+        'banner',
+        'folleto',
         'estado',
         'id_malla',
         'id_programa',

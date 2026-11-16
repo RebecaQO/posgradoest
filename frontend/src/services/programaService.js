@@ -30,6 +30,7 @@ export const programaService = {
     estado === 'Activo' ? `/api/programas/${id}/reactivar` : `/api/programas/${id}/desactivar`,
     { method: 'PATCH' }
   ),
+  promover: (id) => apiJson(`/api/programas/${id}/promocionar`, { method: 'PATCH' }),
   reactivar: (id) => apiJson(`/api/programas/${id}/reactivar`, { method: 'PATCH' }),
   concluir: (id) => apiJson(`/api/programas/${id}/desactivar`, { method: 'PATCH' }),
 
