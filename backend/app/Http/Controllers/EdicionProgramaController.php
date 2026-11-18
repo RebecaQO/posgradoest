@@ -60,7 +60,7 @@ class EdicionProgramaController extends Controller
         $edicion = EdicionPrograma::with([
             'programa.maestria',
             'programa.diplomado',
-            'malla.modulos.materias.materia.docentes',
+            'malla.modulos.materias.materia',
             'malla.materiasDiplomado.materia',
             'docentes',
             'defensas',

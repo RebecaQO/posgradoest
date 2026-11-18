@@ -49,7 +49,6 @@ export const ProgramDetailModal = ({ program: initialProgram, onClose, onApply }
               credits: m.pivot?.creditos ?? 0,
               hours: m.pivot?.carga_horaria ?? 0,
               desc: m.materia?.descripcion ?? '',
-              docentes: m.materia?.docentes ?? [],
             })),
           }));
         } else if (!esMaestria && Array.isArray(mallaActiva.materias_diplomado)) {
@@ -60,7 +59,6 @@ export const ProgramDetailModal = ({ program: initialProgram, onClose, onApply }
               credits: m.pivot?.creditos ?? 0,
               hours: m.pivot?.carga_horaria ?? 0,
               desc: m.materia?.descripcion ?? '',
-              docentes: m.materia?.docentes ?? [],
             })),
           }];
         }
@@ -109,7 +107,7 @@ export const ProgramDetailModal = ({ program: initialProgram, onClose, onApply }
   const hasPerfilAspirante = Boolean(prog.perfil_aspirante && prog.perfil_aspirante.trim());
   const hasRequisitos = Boolean(prog.requisitos_admision && prog.requisitos_admision.trim());
 
-  // Esta ficha usa docentes relacionados con las ediciones y materias del programa
+  // Esta ficha usa docentes relacionados con las ediciones del programa
   const docentesMap = new Map();
   (prog.ediciones || []).forEach(ed => {
     (ed.docentes || []).forEach(doc => {
@@ -117,14 +115,6 @@ export const ProgramDetailModal = ({ program: initialProgram, onClose, onApply }
       if (id) docentesMap.set(Number(id), doc);
     });
   });
-  curriculum
-    .flatMap(semestre => semestre.modules || [])
-    .flatMap(materia => Array.isArray(materia.docentes) ? materia.docentes : [])
-    .filter(docente => docente && (docente.id_doc ?? docente.id) != null)
-    .forEach(docente => {
-      const id = docente.id_doc ?? docente.id;
-      if (!docentesMap.has(Number(id))) docentesMap.set(Number(id), docente);
-    });
   const docentes = Array.from(docentesMap.values());
 
   const tabs = [

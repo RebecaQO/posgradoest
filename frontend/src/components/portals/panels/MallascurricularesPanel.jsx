@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { ArrowLeft, BookOpen, CheckCircle2, ChevronRight, Edit2, Eye, Layers, Plus, RefreshCw, Save, Search, UserCheck, UserX, Trash2, RotateCcw, X } from 'lucide-react';
+import { ArrowLeft, BookOpen, CheckCircle2, ChevronRight, Edit2, Eye, Layers, Plus, RefreshCw, Save, Search, UserX, Trash2, RotateCcw, X } from 'lucide-react';
 import { apiJson } from '../../../utils/api';
 
 // Las respuestas de algunas rutas pueden venir como { success, data }.
@@ -16,7 +16,6 @@ const normalizarMateria = (relacion) => ({
   activo: relacion?.materia?.activo ?? relacion?.activo,
   creditos: relacion?.pivot?.creditos ?? relacion?.creditos ?? '-',
   carga_horaria: relacion?.pivot?.carga_horaria ?? relacion?.carga_horaria ?? '-',
-  docentes: relacion?.materia?.docentes ?? relacion?.docentes ?? [],
 });
 
 const boton = (accion, titulo, Icon, disabled = false, color) => (
@@ -29,7 +28,6 @@ const boton = (accion, titulo, Icon, disabled = false, color) => (
 export default function MallasCurricularesPanel({ programas = [], onMallasChange }) {
   const [mallas, setMallas] = useState([]);
   const [materias, setMaterias] = useState([]);
-  const [docentes, setDocentes] = useState([]);
   const [seleccion, setSeleccion] = useState(null);
   const [detalle, setDetalle] = useState(null);
   const [modalMalla, setModalMalla] = useState(null); // null | crear | editar
@@ -37,8 +35,6 @@ export default function MallasCurricularesPanel({ programas = [], onMallasChange
   const [modalModulo, setModalModulo] = useState(null); // null | crear | editar
   const [formModulo, setFormModulo] = useState({ nombre_mod: '', id_mod: null });
   const [modalMateria, setModalMateria] = useState(null); // null | crear | editar | asignar
-  const [materiaDocentes, setMateriaDocentes] = useState(null);
-  const [docentesSeleccionados, setDocentesSeleccionados] = useState([]);
   const [formMateria, setFormMateria] = useState({ nombre_mat: '', descripcion: '', id_mat: '', creditos: 8, carga_horaria: 128 });
   const [moduloDestino, setModuloDestino] = useState(null);
   const [busqueda, setBusqueda] = useState('');
@@ -55,11 +51,10 @@ export default function MallasCurricularesPanel({ programas = [], onMallasChange
   const recargar = useCallback(async () => {
     setCargando(true);
     try {
-      const [rMallas, rMaterias, rDocentes] = await Promise.all([apiJson('/api/mallas'), apiJson('/api/materias'), apiJson('/api/docentes')]);
+      const [rMallas, rMaterias] = await Promise.all([apiJson('/api/mallas'), apiJson('/api/materias')]);
       const resultado = lista(rMallas);
       setMallas(resultado);
       setMaterias(lista(rMaterias));
-      setDocentes(lista(rDocentes));
       setError('');
       onMallasChange?.(resultado);
     } catch (e) { setError(`No se pudieron cargar las mallas: ${mensaje(e)}`); }
@@ -189,26 +184,6 @@ export default function MallasCurricularesPanel({ programas = [], onMallasChange
     if (!window.confirm(`¿${activar ? 'Restaurar' : 'Eliminar'} la materia "${materia.nombre_mat}"?\nEste cambio afecta a esa materia en todas las mallas o módulos donde esté asignada.`)) return;
     await ejecutar(() => apiJson(`/api/materias/${materia.id_mat}/${activar ? 'reactivar' : 'desactivar'}`, { method: 'PATCH' }), `Materia ${activar ? 'restaurada' : 'eliminada lógicamente'}.`);
   };
-  const abrirDocentesMateria = (materia) => {
-    setMateriaDocentes(materia);
-    setDocentesSeleccionados(materia.docentes.map(docente => Number(docente.id_doc ?? docente.id)));
-    setError('');
-  };
-  const guardarDocentesMateria = async (evento) => {
-    evento.preventDefault();
-    if (!materiaDocentes) return;
-    setGuardando(true);
-    setError('');
-    try {
-      await apiJson(`/api/materias/${materiaDocentes.id_mat}/docentes`, {
-        method: 'PUT', body: { id_docentes: docentesSeleccionados },
-      });
-      setAviso('Docentes de la materia actualizados.');
-      setMateriaDocentes(null);
-      await cargarDetalle(seleccion);
-    } catch (e) { setError(mensaje(e)); }
-    finally { setGuardando(false); }
-  };
 
   const mallasFiltradas = mallas.filter(m => {
     const valor = `${m.nombre_malla} ${nombrePrograma(programaDe(m))} ${m.id_malla}`.toLowerCase();
@@ -243,10 +218,8 @@ export default function MallasCurricularesPanel({ programas = [], onMallasChange
           <div style={{ minWidth: 0 }}><strong>{mat.nombre_mat}</strong>
             {mat.descripcion.trim() && <div style={{ fontSize: 13, color: 'var(--color-text-muted)', marginTop: 4 }}>{mat.descripcion}</div>}
             <div style={{ fontSize: 12, marginTop: 6 }}>Créditos: <strong>{creditos}</strong></div>
-            {mat.docentes.length > 0 && <div style={{ fontSize: 13, marginTop: 6 }}>Docentes: <strong>{mat.docentes.map(docente => [docente.titulo_academico, docente.nombre_completo || `${docente.nombre_doc || ''} ${docente.apellido_doc || ''}`.trim()].filter(Boolean).join(' ')).join(', ')}</strong></div>}
           </div>
           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
-            {!vistaEliminados && boton(() => abrirDocentesMateria(mat), 'Docentes', UserCheck, !esActivo(mat.activo))}
             {!vistaEliminados && boton(() => abrirMateria('editar', modulo, mat), 'Editar', Edit2, !esActivo(mat.activo))}
             {esActivo(mat.activo) ? (!vistaEliminados && boton(() => cambiarEstadoMateria(mat), 'Eliminar', Trash2)) : boton(() => cambiarEstadoMateria(mat), 'Restaurar', RotateCcw, !esActivo(detalle?.activo) || (modulo && !esActivo(modulo.activo)))}
           </div>
@@ -344,23 +317,6 @@ export default function MallasCurricularesPanel({ programas = [], onMallasChange
         <div style={{ display: 'flex', gap: 10, justifyContent: 'end', marginTop: 20 }}>{boton(() => setModalModulo(null), 'Cancelar', X)}<button disabled={guardando} type="submit" className="btn btn-primary"><Save size={16}/> Guardar módulo</button></div>
       </form></div></div>}
 
-    {materiaDocentes && <div className="modal-overlay" onClick={() => setMateriaDocentes(null)}><div className="modal-content" style={{ maxWidth: 570, maxHeight: '90vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
-      <div className="modal-header"><h3>Docentes de {materiaDocentes.nombre_mat}</h3><button type="button" className="modal-close-btn" onClick={() => setMateriaDocentes(null)}><X size={18}/></button></div>
-      <form className="modal-body" onSubmit={guardarDocentesMateria}>
-        <p style={{ color: 'var(--color-text-muted)' }}>Selecciona los docentes que aparecerán vinculados a esta materia en la ficha pública del programa.</p>
-        <div style={{ display: 'grid', gap: 8, maxHeight: 360, overflowY: 'auto' }}>
-          {docentes.filter(docente => esActivo(docente.activo)).map(docente => {
-            const idDocente = Number(docente.id_doc ?? docente.id);
-            const marcado = docentesSeleccionados.includes(idDocente);
-            return <label key={idDocente} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: 10, border: '1px solid var(--color-border)', borderRadius: 8, cursor: 'pointer' }}>
-              <input type="checkbox" checked={marcado} onChange={() => setDocentesSeleccionados(actuales => marcado ? actuales.filter(id => id !== idDocente) : [...actuales, idDocente])} />
-              <span>{[docente.titulo_academico, docente.nombre_completo || `${docente.nombre_doc || docente.nombre || ''} ${docente.apellido_doc || docente.apellido || ''}`.trim()].filter(Boolean).join(' ')}</span>
-            </label>;
-          })}
-          {docentes.filter(docente => esActivo(docente.activo)).length === 0 && <p>No hay docentes activos registrados.</p>}
-        </div>
-        <div style={{ display: 'flex', gap: 10, justifyContent: 'end', marginTop: 20 }}>{boton(() => setMateriaDocentes(null), 'Cancelar', X)}<button className="btn btn-primary" disabled={guardando} type="submit"><Save size={16}/> Guardar docentes</button></div>
-      </form></div></div>}
 
     {modalMateria && <div className="modal-overlay" onClick={() => setModalMateria(null)}><div className="modal-content" style={{ maxWidth: 570, maxHeight: '90vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
       <div className="modal-header"><h3>{modalMateria === 'editar' ? 'Editar materia' : modalMateria === 'asignar' ? 'Asignar materia existente' : 'Crear y asignar materia'}</h3><button type="button" className="modal-close-btn" onClick={() => setModalMateria(null)}><X size={18}/></button></div>
@@ -372,7 +328,7 @@ export default function MallasCurricularesPanel({ programas = [], onMallasChange
           <label className="form-label">Nombre de la materia</label><input className="form-input" required maxLength={150} value={formMateria.nombre_mat} onChange={e => setFormMateria({ ...formMateria, nombre_mat: e.target.value })} />
           <label className="form-label" style={{ marginTop: 12 }}>Descripción</label><textarea rows={3} className="form-textarea" value={formMateria.descripcion} onChange={e => setFormMateria({ ...formMateria, descripcion: e.target.value })} />
         </>}
-        <label className="form-label" style={{ marginTop: 12 }}>Créditos<input type="number" min="1" required className="form-input" value={formMateria.creditos} onChange={e => setFormMateria({ ...formMateria, creditos: e.target.value })} /></label>
+        {modalMateria !== 'crear' && <label className="form-label" style={{ marginTop: 12 }}>Créditos<input type="number" min="1" required className="form-input" value={formMateria.creditos} onChange={e => setFormMateria({ ...formMateria, creditos: e.target.value })} /></label>}
         <div style={{ display: 'flex', gap: 10, justifyContent: 'end', marginTop: 20 }}>{boton(() => setModalMateria(null), 'Cancelar', X)}<button className="btn btn-primary" disabled={guardando || (modalMateria === 'asignar' && materiasCompatibles.length === 0)} type="submit"><Save size={16}/> Guardar</button></div>
       </form></div></div>}
   </section>;

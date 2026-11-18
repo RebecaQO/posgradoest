@@ -374,11 +374,6 @@ Route::middleware('auth:sanctum')->group(function () {
             [MateriaController::class, 'actualizarMateria']
         );
 
-        Route::put(
-            '/materias/{id}/docentes',
-            [MateriaController::class, 'actualizarDocentes']
-        );
-
         Route::post(
             '/modulos/{id}/materias',
             [MateriaController::class, 'asignarMateriaModulo']

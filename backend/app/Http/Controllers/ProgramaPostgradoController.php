@@ -42,18 +42,15 @@ class ProgramaPostgradoController extends Controller
                             'malla',
 
                             // Modulos y materias de maestria.
-                            'malla.modulos.materias.materia.docentes',
+                            'malla.modulos.materias.materia',
 
                             // Materias de diplomado.
-                            'malla.materiasDiplomado.materia.docentes',
 
                             // Docentes asignados a la edicion.
                             'docentes',
                         ])
                         ->orderBy('fecha_inicio', 'desc');
                 },
-                'mallas.modulos.materias.materia.docentes',
-                'mallas.materiasDiplomado.materia.docentes',
             ])
             ->orderBy('id_programa', 'asc')
             ->get();
@@ -94,11 +91,8 @@ class ProgramaPostgradoController extends Controller
         $query = ProgramaPostgrado::with([
             'maestria',
             'diplomado',
-            'mallas.modulos.materias.materia.docentes',
-            'mallas.materiasDiplomado.materia.docentes',
+            'mallas.modulos.materias.materia',
             'ediciones.docentes',
-            'ediciones.malla.modulos.materias.materia.docentes',
-            'ediciones.malla.materiasDiplomado.materia.docentes',
         ]);
 
         if (is_numeric($id)) {

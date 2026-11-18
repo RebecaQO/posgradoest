@@ -156,9 +156,6 @@ export const ProgramDetailView = ({ programId, program: initialProgram, onBack, 
           const pivot = m.pivot || {};
           const creditos = pivot.creditos ?? m.creditos ?? matObj.creditos ?? null;
           const horas = pivot.carga_horaria ?? m.carga_horaria ?? matObj.carga_horaria ?? null;
-          const docentesMat = (matObj.docentes || []).map(d =>
-            d.nombre_completo || [d.titulo_academico, d.nombre_doc, d.apellido_doc].filter(Boolean).join(' ') || `${d.nombre || ''} ${d.apellido || ''}`.trim()
-          ).filter(Boolean);
           return {
             id: matObj.id_mat || m.id_mat || mIdx,
             code: `MAT-${matObj.id_mat || (idx + 1) * 10 + mIdx}`,
@@ -166,7 +163,6 @@ export const ProgramDetailView = ({ programId, program: initialProgram, onBack, 
             credits: creditos,
             hours: horas,
             desc: matObj.descripcion || null,
-            docentes: docentesMat.length > 0 ? docentesMat.join(', ') : null,
           };
         }),
       }));
@@ -181,9 +177,6 @@ export const ProgramDetailView = ({ programId, program: initialProgram, onBack, 
           const pivot = m.pivot || {};
           const creditos = pivot.creditos ?? m.creditos ?? matObj.creditos ?? null;
           const horas = pivot.carga_horaria ?? m.carga_horaria ?? matObj.carga_horaria ?? null;
-          const docentesMat = (matObj.docentes || []).map(d =>
-            d.nombre_completo || [d.titulo_academico, d.nombre_doc, d.apellido_doc].filter(Boolean).join(' ') || `${d.nombre || ''} ${d.apellido || ''}`.trim()
-          ).filter(Boolean);
           return {
             id: matObj.id_mat || m.id_mat || mIdx,
             code: `DIP-${matObj.id_mat || mIdx + 1}`,
@@ -191,7 +184,6 @@ export const ProgramDetailView = ({ programId, program: initialProgram, onBack, 
             credits: creditos,
             hours: horas,
             desc: matObj.descripcion || null,
-            docentes: docentesMat.length > 0 ? docentesMat.join(', ') : null,
           };
         }),
       }];
@@ -240,29 +232,6 @@ export const ProgramDetailView = ({ programId, program: initialProgram, onBack, 
         });
       }
     });
-
-    // 3. Docentes vinculados a materias de la malla activa
-    if (Array.isArray(mallaActiva?.modulos)) {
-      mallaActiva.modulos.forEach((mod) => {
-        (mod.materias || []).forEach((m) => {
-          const matObj = m.materia || m;
-          (matObj.docentes || []).forEach((doc) => {
-            const idDoc = doc.id_doc ?? doc.id;
-            if (idDoc && !docentesMap.has(idDoc)) {
-              const nombreCompleto = doc.nombre_completo || `${doc.nombre_doc || ''} ${doc.apellido_doc || ''}`.trim();
-              docentesMap.set(idDoc, {
-                id: idDoc,
-                name: nombreCompleto,
-                degree: doc.titulo_academico || null,
-                bio: doc.descripcion_profesional || null,
-                avatar: doc.foto_url || doc.foto || null,
-                bibliographyUrl: doc.bibliografia_url || null,
-              });
-            }
-          });
-        });
-      });
-    }
 
     return Array.from(docentesMap.values());
   }, [edicionActiva, ediciones, mallaActiva]);

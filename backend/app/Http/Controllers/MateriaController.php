@@ -355,31 +355,6 @@ class MateriaController extends Controller
         ], 200);
     }
 
-    public function actualizarDocentes(Request $request, int $id)
-    {
-        $materia = Materia::find($id);
-
-        if (!$materia) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Materia no encontrada.',
-            ], 404);
-        }
-
-        $datos = $request->validate([
-            'id_docentes' => ['present', 'array'],
-            'id_docentes.*' => ['integer', Rule::exists('docente', 'id_doc')->where('activo', true)],
-        ]);
-
-        $materia->docentes()->sync($datos['id_docentes']);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Docentes de la materia actualizados correctamente.',
-            'data' => $materia->load('docentes'),
-        ], 200);
-    }
-
     // ========================================
     // DESACTIVAR MATERIA
     // ========================================

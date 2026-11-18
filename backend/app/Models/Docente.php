@@ -102,16 +102,4 @@ class Docente extends Model
             'id_edicion'
         );
     }
-
-    public function materias()
-    {
-        return $this->belongsToMany(
-            Materia::class,
-            'docente_materia',
-            'id_doc',
-            'id_mat',
-            'id_doc',
-            'id_mat'
-        );
-    }
 }

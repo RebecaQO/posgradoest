@@ -10,7 +10,6 @@ import { PromotionalBannerSection } from './components/home/PromotionalBannerSec
 import { FeaturedPrograms } from './components/home/FeaturedPrograms';
 import { KpiSection } from './components/home/KpiSection';
 import { ImpactSection } from './components/home/ImpactSection';
-import { FAQSection } from './components/home/FAQSection';
 import { EventsSection } from './components/home/EventsSection';
 import { MasterBannerPopup } from './components/common/MasterBannerPopup';
 
@@ -133,7 +132,6 @@ const MainApp = () => {
               onExplorePrograms={() => { setCurrentTab('programas'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
               onAboutInstitution={() => { setCurrentTab('institucion'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
             />
-            <FAQSection />
           </div>
         )}
         {currentTab === 'institucion' && <InstitutionView />}

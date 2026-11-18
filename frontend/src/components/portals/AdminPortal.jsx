@@ -195,12 +195,7 @@ export const AdminPortal = ({ onExitAdmin }) => {
   const [materiaForm, setMateriaForm] = useState({
     id_mat: '',
     nombre_mat: '',
-    creditos: 8,
-    carga_horaria: 128,
-    tipo: 'Teórico-Práctica',
-    software_requerido: 'R, Python',
-    descripcion: '',
-    id_docente: ''
+    descripcion: ''
   });
 
   // User Form
@@ -447,12 +442,7 @@ export const AdminPortal = ({ onExitAdmin }) => {
     setMateriaForm({
       id_mat: `MAT-${Math.floor(100 + Math.random() * 900)}`,
       nombre_mat: '',
-      creditos: 8,
-      carga_horaria: 128,
-      tipo: 'Teórico-Práctica',
-      software_requerido: 'R, Python',
-      descripcion: '',
-      id_docente: docentes.length > 0 ? docentes[0].id : ''
+      descripcion: ''
     });
     setMateriaModalOpen(true);
   };
@@ -1770,75 +1760,9 @@ export const AdminPortal = ({ onExitAdmin }) => {
                 />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                <div className="form-group">
-                  <label className="form-label">Créditos</label>
-                  <input
-                    type="number"
-                    min="1"
-                    max="30"
-                    required
-                    value={materiaForm.creditos}
-                    onChange={(e) => setMateriaForm({ ...materiaForm, creditos: e.target.value })}
-                    className="form-input"
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label className="form-label">Carga Horaria (hrs)</label>
-                  <input
-                    type="number"
-                    min="10"
-                    max="200"
-                    required
-                    value={materiaForm.carga_horaria}
-                    onChange={(e) => setMateriaForm({ ...materiaForm, carga_horaria: e.target.value })}
-                    className="form-input"
-                  />
-                </div>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                <div className="form-group">
-                  <label className="form-label">Tipo de Materia</label>
-                  <select
-                    value={materiaForm.tipo}
-                    onChange={(e) => setMateriaForm({ ...materiaForm, tipo: e.target.value })}
-                    className="form-select"
-                  >
-                    <option value="Teórico-Práctica">Teórico-Práctica</option>
-                    <option value="Laboratorio">Laboratorio Computacional</option>
-                    <option value="Teórica">Teórica</option>
-                    <option value="Práctica">Práctica</option>
-                  </select>
-                </div>
-
-                <div className="form-group">
-                  <label className="form-label">Software Requerido</label>
-                  <input
-                    type="text"
-                    value={materiaForm.software_requerido}
-                    onChange={(e) => setMateriaForm({ ...materiaForm, software_requerido: e.target.value })}
-                    className="form-input"
-                    placeholder="Ej. R, Python, SPSS, SAS"
-                  />
-                </div>
-              </div>
-
               <div className="form-group">
-                <label className="form-label">Docente Responsable</label>
-                <select
-                  value={materiaForm.id_docente}
-                  onChange={(e) => setMateriaForm({ ...materiaForm, id_docente: e.target.value })}
-                  className="form-select"
-                >
-                  <option value="">-- Sin docente asignado --</option>
-                  {docentes.map(d => (
-                    <option key={d.id} value={d.id}>
-                      {d.nombre_completo} ({d.titulo})
-                    </option>
-                  ))}
-                </select>
+                <label className="form-label">Descripción</label>
+                <textarea value={materiaForm.descripcion} onChange={(e) => setMateriaForm({ ...materiaForm, descripcion: e.target.value })} className="form-textarea" rows={3} />
               </div>
 
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1.5rem' }}>
