@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import UsuariosPanel from './panels/UsuariosPanel';
 import DefensasPanel from './panels/DefensasPanel';
+import ReportesPanel from './panels/ReportesPanel';
 import NoticiasPanel from './panels/NoticiasPanel';
 import CarreraPanel from './panels/CarreraPanel';
 import PersonalAdministrativoPanel from './panels/PersonalAdministrativoPanel';
@@ -1619,42 +1620,7 @@ export const AdminPortal = ({ onExitAdmin }) => {
 
               {/* 6. SECCIÓN MÉTRICAS */}
               {activeTab === 'metricas' && (
-                <div className="animate-fade-in">
-                  <h3 style={{ fontSize: '1.35rem', color: 'var(--color-text-main)', fontWeight: 800, marginBottom: '1.5rem' }}>
-                    Resumen Ejecutivo & Métricas de Admisión
-                  </h3>
-
-                  <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-                    gap: '1.25rem',
-                    marginBottom: '2rem'
-                  }}>
-                    <div className="glass-card" style={{ padding: '1.5rem', background: '#ffffff' }}>
-                      <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', fontWeight: 700 }}>TOTAL POSTULANTES</div>
-                      <div style={{ fontSize: '2.5rem', fontWeight: 800, color: 'var(--color-green-inst)' }}>{'—'}</div>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--color-text-subtle)' }}>Métricas no conectadas a datos de postulantes</div>
-                    </div>
-
-                    <div className="glass-card" style={{ padding: '1.5rem', background: '#ffffff' }}>
-                      <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', fontWeight: 700 }}>HABILITADOS / ADMITIDOS</div>
-                      <div style={{ fontSize: '2.5rem', fontWeight: 800, color: 'var(--color-green-inst)' }}>{'—'}</div>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--color-text-subtle)' }}>Métricas no conectadas a datos de postulantes</div>
-                    </div>
-
-                    <div className="glass-card" style={{ padding: '1.5rem', background: '#ffffff' }}>
-                      <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', fontWeight: 700 }}>OBSERVADOS / EN REVISIÓN</div>
-                      <div style={{ fontSize: '2.5rem', fontWeight: 800, color: 'var(--color-status-warning)' }}>{'—'}</div>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--color-text-subtle)' }}>Métricas no conectadas a datos de postulantes</div>
-                    </div>
-
-                    <div className="glass-card" style={{ padding: '1.5rem', background: '#ffffff' }}>
-                      <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', fontWeight: 700 }}>PROGRAMAS ACTIVOS</div>
-                      <div style={{ fontSize: '2.5rem', fontWeight: 800, color: 'var(--color-blue-steel)' }}>{programCatalog.filter(p => p.status === 'Activo').length}</div>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--color-text-subtle)' }}>Convocatoria 2026</div>
-                    </div>
-                  </div>
-                </div>
+                <ReportesPanel />
               )}
       {/* VISTA DE EDICIÓN VINCULADA A CONVOCATORIA */}
       {edicionParaVer && (

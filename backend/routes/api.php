@@ -16,6 +16,7 @@ use App\Http\Controllers\ModuloController;
 use App\Http\Controllers\ProgramaPostgradoController;
 use App\Http\Controllers\PersonalAdministrativoController;
 use App\Http\Controllers\RegistroAcademicoController;
+use App\Http\Controllers\ReportesController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -240,6 +241,8 @@ Route::middleware('auth:sanctum')->group(function () {
     // ==================================================
 
     Route::middleware('administrador')->group(function () {
+
+        Route::get('/admin/reportes/metricas', [ReportesController::class, 'metricas']);
 
         Route::get('/admin/personal-administrativo', [PersonalAdministrativoController::class, 'administrar']);
         Route::post('/personal-administrativo', [PersonalAdministrativoController::class, 'crear']);
