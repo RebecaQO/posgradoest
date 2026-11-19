@@ -20,8 +20,6 @@ export const AuthProvider = ({ children }) => {
     return saved ? JSON.parse(saved) : null;
   });
 
-  const [loginModalOpen, setLoginModalOpen] = useState(false);
-  const [selectedRoleTab, setSelectedRoleTab] = useState('admin');
   const [authError, setAuthError] = useState('');
 
   useEffect(() => {
@@ -37,7 +35,6 @@ export const AuthProvider = ({ children }) => {
       removeAuthToken();
       setCurrentUser(null);
       setAuthError('La sesión venció. Inicie sesión nuevamente.');
-      setLoginModalOpen(true);
     };
 
     window.addEventListener(AUTH_REQUIRED_EVENT, handleUnauthorized);
@@ -80,7 +77,6 @@ export const AuthProvider = ({ children }) => {
 
       setCurrentUser(normalizedUser);
       setAuthError('');
-      setLoginModalOpen(false);
       return normalizedUser;
     } catch (error) {
       console.error('Error durante autenticación:', error);
@@ -102,10 +98,6 @@ export const AuthProvider = ({ children }) => {
   return (
     <AuthContext.Provider value={{
       currentUser,
-      loginModalOpen,
-      setLoginModalOpen,
-      selectedRoleTab,
-      setSelectedRoleTab,
       loginAs,
       logout,
       authError

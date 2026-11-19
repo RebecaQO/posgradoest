@@ -1,24 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import logoPosgrado from '../../assets/images/logo/logo_posgrado.jpg';
-import { useAuth } from '../../context/AuthContext';
 import { programaService } from '../../services/programaService';
 import {
   GraduationCap,
   Menu,
   X,
-  User,
-  LogOut,
   ChevronDown,
   BookOpen,
   FileText,
   CheckCircle2,
   MapPin,
   Newspaper,
-  LayoutDashboard
 } from 'lucide-react';
 
 export const Navbar = ({ currentTab, setCurrentTab, onOpenProgramDetail }) => {
-  const { currentUser, logout, setLoginModalOpen } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [programsDropdownOpen, setProgramsDropdownOpen] = useState(false);
   const [dbPrograms, setDbPrograms] = useState([]);
@@ -34,7 +29,6 @@ export const Navbar = ({ currentTab, setCurrentTab, onOpenProgramDetail }) => {
   }, []);
 
   const navItems = [
-    { id: 'inicio', label: 'Inicio' },
     { id: 'institucion', label: 'Nuestra Institución' },
     {
       id: 'programas',
@@ -258,53 +252,8 @@ export const Navbar = ({ currentTab, setCurrentTab, onOpenProgramDetail }) => {
           })}
         </div>
 
-        {/* Right CTA Button or User Role Profile */}
+        {/* Mobile Toggle */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-          {currentUser ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <button
-                onClick={() => handleNavClick('portal-admin')}
-                className="btn btn-sm"
-                style={{
-                  background: 'var(--color-green-inst-subtle)',
-                  border: '1.5px solid var(--color-green-inst)',
-                  color: 'var(--color-green-inst)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.45rem',
-                  fontWeight: 800
-                }}
-              >
-                <LayoutDashboard size={14} />
-                <span className="hide-on-mobile">Portal Admin</span>
-              </button>
-
-              <button
-                onClick={logout}
-                title="Cerrar Sesión"
-                className="btn btn-sm btn-secondary"
-                style={{ padding: '0.45rem' }}
-              >
-                <LogOut size={15} />
-              </button>
-            </div>
-          ) : (
-            <button
-              onClick={() => setLoginModalOpen(true)}
-              className="btn btn-primary btn-sm nav-admin-btn-desktop"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.45rem',
-                fontWeight: 800
-              }}
-            >
-              <User size={15} />
-              <span>Portal Admin</span>
-            </button>
-          )}
-
-          {/* Mobile Toggle */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             className="mobile-nav-toggle"
@@ -364,44 +313,6 @@ export const Navbar = ({ currentTab, setCurrentTab, onOpenProgramDetail }) => {
             </button>
           ))}
 
-          {!currentUser ? (
-            <button
-              onClick={() => {
-                setMobileMenuOpen(false);
-                setLoginModalOpen(true);
-              }}
-              className="btn btn-primary btn-block"
-              style={{ marginTop: '0.75rem', minHeight: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
-            >
-              <User size={16} />
-              <span>Acceso al Portal Administrativo</span>
-            </button>
-          ) : (
-            <div style={{ marginTop: '0.75rem', display: 'flex', gap: '0.5rem' }}>
-              <button
-                onClick={() => {
-                  setMobileMenuOpen(false);
-                  handleNavClick('portal-admin');
-                }}
-                className="btn btn-primary btn-block"
-                style={{ flex: 1, minHeight: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
-              >
-                <LayoutDashboard size={16} />
-                <span>Panel Administrativo</span>
-              </button>
-              <button
-                onClick={() => {
-                  setMobileMenuOpen(false);
-                  logout();
-                }}
-                className="btn btn-secondary"
-                title="Cerrar Sesión"
-                style={{ minHeight: '44px', padding: '0 1rem' }}
-              >
-                <LogOut size={16} />
-              </button>
-            </div>
-          )}
         </div>
       )}
 

@@ -3,7 +3,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { ApplicantsProvider } from './context/ApplicantsContext';
 import { Navbar } from './components/layout/Navbar';
 import { Footer } from './components/layout/Footer';
-import { LoginModal } from './components/auth/LoginModal';
+import { AdminLoginView } from './components/auth/AdminLoginView';
 
 import { HeroSection } from './components/home/HeroSection';
 import { PromotionalBannerSection } from './components/home/PromotionalBannerSection';
@@ -29,6 +29,8 @@ import './styles/components.css';
 
 const getInitialHashState = () => {
   const hash = typeof window !== 'undefined' ? window.location.hash || '' : '';
+  if (hash === '#admin' || hash === '#/admin') return { tab: 'admin-login', programId: null };
+  if (hash === '#admin/panel' || hash === '#/admin/panel') return { tab: 'portal-admin', programId: null };
   if (hash.startsWith('#programa/') || hash.startsWith('#/programa/')) {
     const id = hash.replace(/^#\/?programa\//, '');
     return {
@@ -49,7 +51,7 @@ const MainApp = () => {
   const [selectedProgramDetailId, setSelectedProgramDetailId] = useState(initial.programId);
   const [targetProgramForAdmission, setTargetProgramForAdmission] = useState(null);
   const [programFilterState, setProgramFilterState] = useState(null);
-  const { currentUser } = useAuth();
+  const { currentUser, logout } = useAuth();
 
   React.useEffect(() => {
     const handleHash = () => {
@@ -63,12 +65,16 @@ const MainApp = () => {
         }
       } else if (hash === '#programas' || hash === '#/programas') {
         setCurrentTab('programas');
+      } else if (hash === '#admin' || hash === '#/admin') {
+        setCurrentTab(currentUser ? 'portal-admin' : 'admin-login');
+      } else if (hash === '#admin/panel' || hash === '#/admin/panel') {
+        setCurrentTab('portal-admin');
       }
     };
     handleHash();
     window.addEventListener('hashchange', handleHash);
     return () => window.removeEventListener('hashchange', handleHash);
-  }, []);
+  }, [currentUser]);
 
   const handleNavigateToAdmission = (programId = null) => {
     if (programId) setTargetProgramForAdmission(programId);
@@ -83,8 +89,16 @@ const MainApp = () => {
 
   const handleLoginSuccess = () => {
     setCurrentTab('portal-admin');
+    window.location.hash = 'admin/panel';
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
+
+  React.useEffect(() => {
+    if (currentTab === 'portal-admin' && !currentUser) {
+      setCurrentTab('admin-login');
+      window.location.hash = 'admin';
+    }
+  }, [currentTab, currentUser]);
 
   const handleOpenProgramDetail = (prog) => {
     const progId = prog?.id || prog?.code || prog;
@@ -95,15 +109,21 @@ const MainApp = () => {
   };
 
   // MODO ADMIN: pantalla completa sin navbar/footer publicos
-  if (currentTab === 'portal-admin') {
+  if (currentTab === 'portal-admin' && currentUser) {
     return (
       <AdminPortal
-        onExitAdmin={() => {
+        onExitAdmin={async () => {
+          await logout();
           setCurrentTab('inicio');
+          window.location.hash = '';
           window.scrollTo({ top: 0, behavior: 'smooth' });
         }}
       />
     );
+  }
+
+  if (currentTab === 'admin-login') {
+    return <AdminLoginView onLoginSuccess={handleLoginSuccess} onBack={() => { setCurrentTab('inicio'); window.location.hash = ''; }} />;
   }
 
   return (
@@ -152,8 +172,6 @@ const MainApp = () => {
       </main>
 
       <Footer onNavigate={(tab) => { if (window.location.hash.startsWith('#programa/')) window.location.hash = ''; setCurrentTab(tab); }} />
-      <LoginModal onLoginSuccess={handleLoginSuccess} />
-
       {selectedProgramModal && (
         <ProgramDetailModal
           program={selectedProgramModal}
