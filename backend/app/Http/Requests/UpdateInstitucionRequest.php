@@ -51,6 +51,9 @@ class UpdateInstitucionRequest extends FormRequest
             'sociest_url' => 'nullable|url|max:500',
             'facebook_url' => 'nullable|url|max:500',
             'instagram_url' => 'nullable|url|max:500',
+            'contacto_etiqueta' => 'nullable|string|max:120',
+            'contacto_titulo' => 'nullable|string|max:255',
+            'contacto_descripcion' => 'nullable|string|max:1000',
             'descripcion_ieta' => 'nullable|string',
             'descripcion_club' => 'nullable|string',
         ];

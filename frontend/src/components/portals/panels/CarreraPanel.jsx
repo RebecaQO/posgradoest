@@ -30,6 +30,9 @@ export default function CarreraPanel() {
     sociest_url: '',
     facebook_url: '',
     instagram_url: '',
+    contacto_etiqueta: '',
+    contacto_titulo: '',
+    contacto_descripcion: '',
   });
 
   const [loading, setLoading] = useState(true);
@@ -58,6 +61,9 @@ export default function CarreraPanel() {
         sociest_url: info.sociest_url || '',
         facebook_url: info.facebook_url || '',
         instagram_url: info.instagram_url || '',
+        contacto_etiqueta: info.contacto_etiqueta || '',
+        contacto_titulo: info.contacto_titulo || '',
+        contacto_descripcion: info.contacto_descripcion || '',
       });
     } catch (err) {
       if (err.status === 403) {
@@ -113,6 +119,9 @@ export default function CarreraPanel() {
         sociest_url: info.sociest_url || '',
         facebook_url: info.facebook_url || '',
         instagram_url: info.instagram_url || '',
+        contacto_etiqueta: info.contacto_etiqueta || '',
+        contacto_titulo: info.contacto_titulo || '',
+        contacto_descripcion: info.contacto_descripcion || '',
       });
       setSuccess('Información institucional actualizada exitosamente.');
       setTimeout(() => setSuccess(null), 4000);
@@ -335,6 +344,25 @@ export default function CarreraPanel() {
                 {fieldErrors.campus_virtual_url[0]}
               </p>
             )}
+          </div>
+
+          <div style={{ gridColumn: '1 / -1', borderTop: '1px solid var(--color-border)', paddingTop: '1.25rem' }}>
+            <h4 style={{ margin: '0 0 1rem', color: 'var(--color-text-main)' }}>Encabezado de Ubicación y Contacto</h4>
+          </div>
+          <div className="form-group">
+            <label className="form-label" style={{ fontWeight: 600 }}>Etiqueta superior</label>
+            <input type="text" maxLength={120} value={form.contacto_etiqueta} onChange={(e) => handleChange('contacto_etiqueta', e.target.value)} className="form-input" />
+            {fieldErrors.contacto_etiqueta && <p style={{ color: '#ef4444', fontSize: '0.8rem' }}>{fieldErrors.contacto_etiqueta[0]}</p>}
+          </div>
+          <div className="form-group">
+            <label className="form-label" style={{ fontWeight: 600 }}>Título</label>
+            <input type="text" maxLength={255} value={form.contacto_titulo} onChange={(e) => handleChange('contacto_titulo', e.target.value)} className="form-input" />
+            {fieldErrors.contacto_titulo && <p style={{ color: '#ef4444', fontSize: '0.8rem' }}>{fieldErrors.contacto_titulo[0]}</p>}
+          </div>
+          <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+            <label className="form-label" style={{ fontWeight: 600 }}>Descripción</label>
+            <textarea rows={2} maxLength={1000} value={form.contacto_descripcion} onChange={(e) => handleChange('contacto_descripcion', e.target.value)} className="form-textarea" />
+            {fieldErrors.contacto_descripcion && <p style={{ color: '#ef4444', fontSize: '0.8rem' }}>{fieldErrors.contacto_descripcion[0]}</p>}
           </div>
 
           <div style={{ gridColumn: '1 / -1', borderTop: '1px solid var(--color-border)', paddingTop: '1.25rem' }}>

@@ -1,19 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import {
-  Building,
-  Bus,
-  CheckCircle2,
-  Clock,
-  Compass,
-  ExternalLink,
-  Mail,
-  Map,
-  MapPin,
-  MessageCircle,
-  Navigation,
-  Phone,
-  ShieldCheck
-} from 'lucide-react';
+import { Building, Compass } from 'lucide-react';
 
 import monoblockImg from '../../assets/images/sedes/monoblock.jpg';
 import cotacotaImg from '../../assets/images/sedes/cotacota.jpg';
@@ -27,7 +13,10 @@ export const ContactView = () => {
     whatsapp: '',
     email_principal: 'estapost@fcpn.edu.bo',
     horario_atencion: 'Lunes a Viernes 08:30 a 16:30 (Continuo)',
-    director_nombre: 'Dirección de la Carrera de Estadística y Posgrado'
+    director_nombre: 'Dirección de la Carrera de Estadística y Posgrado',
+    contacto_etiqueta: 'SEDES DE LA CARRERA',
+    contacto_titulo: 'Ubicación de Sedes',
+    contacto_descripcion: 'Encuentra las sedes de la Carrera de Estadística en la ciudad de La Paz.'
   });
 
   // Estado para alternar entre Foto y Mapa en cada tarjeta de sede
@@ -46,10 +35,9 @@ export const ContactView = () => {
   useEffect(() => {
     const fetchInfo = async () => {
       try {
-        const data = await institucionService.getInfo();
-        if (data && data.email_principal) {
-          setInfo((prev) => ({ ...prev, ...data }));
-        }
+        const response = await institucionService.getInfo();
+        const data = response?.data || response;
+        if (data && typeof data === 'object') setInfo((prev) => ({ ...prev, ...data }));
       } catch (err) {
         console.error('Error cargando info institucional en ContactView:', err);
       }
@@ -86,55 +74,6 @@ export const ContactView = () => {
     }
   ];
 
-  const channels = [
-    {
-      type: 'whatsapp',
-      icon: MessageCircle,
-      bg: 'rgba(37, 211, 102, 0.12)',
-      color: '#16a34a',
-      title: 'WhatsApp Oficial',
-      val: info.whatsapp,
-      desc: 'Orientación inmediata sobre convocatorias vigentes, aranceles y requisitos de postulación.',
-      actionText: 'Enviar mensaje',
-      href: String(info.whatsapp || '').replace(/\D/g, '').length >= 8
-        ? `https://wa.me/${String(info.whatsapp).replace(/\D/g, '')}?text=${encodeURIComponent('Hola, deseo más información sobre los programas de posgrado de Estadística.')}`
-        : ''
-    },
-    {
-      type: 'phone',
-      icon: Phone,
-      bg: 'var(--color-blue-steel-subtle)',
-      color: 'var(--color-blue-steel)',
-      title: 'Central Telefónica',
-      val: info.telefono,
-      desc: 'Secretaría de Posgrado para consultas académicas y seguimiento de expedientes.',
-      actionText: 'Llamar a secretaría',
-      href: `tel:${(info.telefono || '').replace(/\s+/g, '')}`
-    },
-    {
-      type: 'mail',
-      icon: Mail,
-      bg: 'rgba(99, 102, 241, 0.12)',
-      color: '#4f46e5',
-      title: 'Correo Institucional',
-      val: info.email_principal,
-      desc: 'Canal oficial para correspondencia institucional, cartas de postulación y trámites.',
-      actionText: 'Escribir correo',
-      href: `mailto:${info.email_principal}`
-    },
-    {
-      type: 'clock',
-      icon: Clock,
-      bg: 'rgba(217, 119, 6, 0.12)',
-      color: '#d97706',
-      title: 'Horario Continuo',
-      val: '08:30 a 16:30',
-      desc: `${info.horario_atencion}. Días hábiles de lunes a viernes en ambas sedes.`,
-      actionText: 'Días hábiles',
-      href: null
-    }
-  ];
-
   return (
     <div className="cv-container animate-fade-in">
       <div className="cv-inner">
@@ -143,12 +82,10 @@ export const ContactView = () => {
         <header className="cv-header">
           <div className="cv-header__kicker">
             <Compass size={15} aria-hidden="true" />
-            <span>SEDES &amp; CANALES DE CONTACTO</span>
+            <span>{info.contacto_etiqueta}</span>
           </div>
-          <h1>Ubicación de Sedes y Canales de Atención</h1>
-          <p>
-            Encuentra nuestras dos sedes habilitadas en la ciudad de La Paz para cursar programas de maestría y realizar trámites de admisión.
-          </p>
+          <h1>{info.contacto_titulo}</h1>
+          <p>{info.contacto_descripcion}</p>
         </header>
 
         {/* Directorio editorial de sedes */}
@@ -217,55 +154,7 @@ export const ContactView = () => {
           })}
         </div>
 
-        {/* 2. Tarjetas de Canales de Atención Directa */}
-        <section className="cv-channels-section" aria-labelledby="channels-heading">
-          <div className="cv-section-title-bar">
-            <div>
-              <h2 id="channels-heading" className="cv-section-title">Canales Oficiales de Atención</h2>
-              <p style={{ margin: '0.35rem 0 0', color: 'var(--color-text-muted)', fontSize: '0.95rem' }}>
-                Comunícate directamente con la secretaría académica y el equipo de posgrado.
-              </p>
-            </div>
-          </div>
-
-          <div className="cv-channels-grid">
-            {channels.map((c, i) => {
-              const Icon = c.icon;
-              const CardTag = c.href ? 'a' : 'div';
-              const cardProps = c.href
-                ? {
-                    href: c.href,
-                    target: c.type === 'whatsapp' ? '_blank' : '_self',
-                    rel: c.type === 'whatsapp' ? 'noreferrer' : '',
-                    className: `cv-channel-card cv-channel-card--${c.type}`
-                  }
-                : {
-                    className: `cv-channel-card cv-channel-card--${c.type}`
-                  };
-
-              return (
-                <CardTag key={i} {...cardProps}>
-                  <div>
-                    <div className="cv-channel-icon" style={{ background: c.bg, color: c.color }}>
-                      <Icon size={24} aria-hidden="true" />
-                    </div>
-
-                    <div className="cv-channel-title">{c.title}</div>
-                    <div className="cv-channel-val">{c.val}</div>
-                    <p className="cv-channel-desc">{c.desc}</p>
-                  </div>
-
-                  <div className="cv-channel-action-row" style={{ color: c.color }}>
-                    <span>{c.actionText}</span>
-                    {c.href && <ExternalLink size={14} aria-hidden="true" />}
-                  </div>
-                </CardTag>
-              );
-            })}
-          </div>
-        </section>
-
-        {/* 3. Tarjetas de Unidades Adscritas */}
+        {/* Tarjetas de Unidades Adscritas */}
         <section aria-labelledby="units-heading">
           <div className="cv-section-title-bar">
             <div>

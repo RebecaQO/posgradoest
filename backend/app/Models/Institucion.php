@@ -22,6 +22,9 @@ class Institucion extends Model
         'sociest_url',
         'facebook_url',
         'instagram_url',
+        'contacto_etiqueta',
+        'contacto_titulo',
+        'contacto_descripcion',
         'descripcion_ieta',
         'descripcion_club',
     ];

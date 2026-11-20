@@ -28,6 +28,9 @@ class InstitucionController extends Controller
                 'sociest_url' => 'https://www.sociest.org/?m=1',
                 'facebook_url' => 'https://www.facebook.com/share/1AHBshwTmJ/',
                 'instagram_url' => 'https://www.instagram.com/estadisticaumsa?lqvp=c3ppYjFjaWo3amF0',
+                'contacto_etiqueta' => 'SEDES DE LA CARRERA',
+                'contacto_titulo' => 'Ubicación de Sedes',
+                'contacto_descripcion' => 'Encuentra las sedes de la Carrera de Estadística en la ciudad de La Paz.',
                 'descripcion_ieta' => 'Instituto de Estadística Teórica y Aplicada (IETA): Centro de investigación cuantitativa avanzada y consultoría estadística aplicada para el desarrollo nacional.',
                 'descripcion_club' => 'Club Científico de Estadística: Comunidad estudiantil y académica de investigación formativa, semilleros y proyectos de ciencia de datos.',
             ]
