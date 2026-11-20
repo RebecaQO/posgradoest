@@ -6,9 +6,9 @@ Sistema integral web para la gestión, difusión y administración de programas 
 
 ## 🏗️ Arquitectura del Sistema
 
-- **Backend:** Laravel 11.x + Laravel Sanctum (Autenticación API) + PHP 8.2+ en contenedor Docker.
+- **Backend:** Laravel 13 + Laravel Sanctum + PHP 8.3+ en contenedor Docker.
 - **Base de Datos:** PostgreSQL 16.x con persistencia en volumen Docker.
-- **Frontend:** React 19 + Vite + Tailwind CSS + Lucide Icons + `apiJson` unificado.
+- **Frontend:** React 19 + Vite 6 + Lucide Icons + cliente `apiJson` unificado.
 - **Servidor Web Frontend:** Nginx Alpine para servir la SPA y resolver rutas mediante HTML5 History mode.
 - **Orquestación:** Docker Compose (`compose.yaml` + `compose.local.yaml`).
 
@@ -22,11 +22,10 @@ Sistema integral web para la gestión, difusión y administración de programas 
 
 ---
 
-### Paso 1. Clonar el Repositorio y Ubicarse en la Rama
+### Paso 1. Clonar el Repositorio y Ubicarse en la Rama Principal
 ```bash
-git clone https://github.com/RebecaQO/postgrado_estadistica.git
-cd postgrado_estadistica
-git checkout VERSION_ACTUALIZADA
+git clone --branch main https://github.com/RebecaQO/posgradoest.git
+cd posgradoest
 ```
 
 ---
@@ -44,11 +43,25 @@ cp .env.example .env
 Copy-Item .env.example .env
 ```
 
-> **Nota:** `.env.example` ya viene preconfigurado con las claves y puertos necesarios para levantar de forma inmediata en local:
-> - `APP_URL=http://localhost:8080`
-> - `FRONTEND_URL=http://localhost:3000`
-> - `VITE_API_URL=http://localhost:8080`
-> - `DB_DATABASE=portal` / `DB_USERNAME=portal`
+> **Importante:** la plantilla no incluye claves ni contraseñas. Antes de iniciar Compose, genera y configura `APP_KEY` y una contraseña segura para la base de datos. Genera una clave Laravel con:
+> ```bash
+> docker run --rm serversideup/php:8.5-cli php -r "echo 'base64:'.base64_encode(random_bytes(32)).PHP_EOL;"
+> ```
+> Copia el valor en `APP_KEY` dentro de `.env` y define `DB_PASSWORD` con una contraseña única. No subas `.env` al repositorio.
+
+Variables necesarias para el despliegue:
+
+| Variable | Uso |
+| --- | --- |
+| `APP_KEY` | Clave Laravel generada para el entorno |
+| `APP_URL` | URL pública de la API |
+| `FRONTEND_URL` | URL pública del sitio |
+| `VITE_API_URL` | Origen de API incluido en el bundle del frontend |
+| `SANCTUM_STATEFUL_DOMAINS` | Host del frontend sin esquema ni ruta |
+| `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD` | Credenciales PostgreSQL; contraseña obligatoria y única |
+| `TZ` | Zona horaria; usar `America/La_Paz` |
+
+Las URL de la plantilla apuntan a `localhost` para desarrollo. En Dokploy, reemplázalas por los dominios HTTPS públicos antes de construir el frontend.
 
 ---
 
@@ -60,8 +73,8 @@ docker compose -f compose.yaml -f compose.local.yaml up -d --build
 ```
 
 **¿Por qué dos archivos?**
-- `compose.yaml`: Define la arquitectura de producción (servicios `app`, `frontend`, `db`, volúmenes de almacenamiento y redes internas).
-- `compose.local.yaml`: Mapea los puertos a tu máquina anfitriona (`3000:80` para el frontend y `8080:8080` para el backend).
+- `compose.yaml`: Define los servicios `app`, `frontend`, `db`, redes y volúmenes para Dokploy. No publica puertos al host.
+- `compose.local.yaml`: Solo para desarrollo; publica los puertos en loopback (`127.0.0.1:3000` y `127.0.0.1:8080`) y guarda los archivos en `./files/storage`.
 
 ---
 
@@ -97,6 +110,7 @@ Para sembrar datos iniciales:
 ```bash
 docker compose -f compose.yaml -f compose.local.yaml exec app php artisan db:seed --force
 ```
+El seeder de producción no crea usuarios de demostración ni credenciales predeterminadas. Los catálogos administrables se crean desde el panel; la migración de institución inicializa los datos institucionales necesarios.
 
 ### Ver Rutas de la API Backend
 ```bash
@@ -163,26 +177,40 @@ docker compose -f compose.yaml -f compose.local.yaml down -v
 
 ## 🌿 Flujo de Trabajo en Git
 
-Para trabajar y subir cambios a la rama oficial `VERSION_ACTUALIZADA`:
+Para proponer cambios, trabaja en una rama separada y abre un pull request hacia `main` del repositorio personal. La publicación oficial no se realiza desde este repositorio personal.
 
 ```bash
-# 1. Asegurarte de estar en la rama de trabajo
-git checkout VERSION_ACTUALIZADA
+# 1. Crear una rama de trabajo desde main
+git checkout main
+git pull origin main
+git checkout -b feature/nombre-del-cambio
 
-# 2. Descargar los últimos cambios
-git pull origin VERSION_ACTUALIZADA
-
-# 3. Revisar el estado de archivos modificados
+# 2. Revisar el estado de archivos modificados
 git status
 
-# 4. Agregar cambios para commit
+# 3. Agregar cambios para commit
 git add .
 
-# 5. Crear el commit descriptivo
+# 4. Crear el commit descriptivo
 git commit -m "feat/fix: descripcion clara de los cambios realizados"
 
-# 6. Subir al repositorio remoto
-git push origin VERSION_ACTUALIZADA
+# 5. Publicar la rama para revisión
+git push -u origin feature/nombre-del-cambio
+```
+
+## Despliegue oficial en Dokploy
+
+El despliegue productivo debe configurarse desde el repositorio de la organización `github.com/sociest` después de la revisión y aprobación institucional. En Dokploy se selecciona `compose.yaml`, se configura la red externa `dokploy-network` y se enrutan los dominios al servicio `frontend` (puerto interno 80) y a `app` (puerto interno 8080). El volumen nombrado `db_data` conserva PostgreSQL; los archivos persistentes se montan desde `../files/storage`.
+
+La aplicación actualmente no envía correos desde el servidor. Si se agrega envío de restablecimiento de contraseña o notificaciones, se debe coordinar un SMTP externo y configurar sus credenciales únicamente en Dokploy.
+
+## Calidad y dependencias
+
+`composer.lock` y `frontend/package-lock.json` fijan las versiones de dependencias. El workflow de GitHub Actions ejecuta auditoría de Composer y npm, pruebas PHP, Vitest, Playwright con axe y la compilación del frontend. Para comprobaciones locales:
+
+```bash
+cd backend && composer audit --locked
+cd ../frontend && npm audit --audit-level=high && npm test && npm run test:e2e && npm run build
 ```
 
 ---
@@ -190,8 +218,8 @@ git push origin VERSION_ACTUALIZADA
 ## 📂 Estructura Limpia del Repositorio
 
 ```text
-postgrado_estadistica/
-├── backend/                  # API REST en Laravel 11 (PHP 8.2+)
+posgradoest/
+├── backend/                  # API REST en Laravel 13 (PHP 8.3+)
 │   ├── app/                  # Controladores, Modelos, Recursos y Middleware
 │   ├── config/               # Configuración de base de datos, auth y cors
 │   ├── database/             # Migraciones y seeders de la base de datos
@@ -208,12 +236,12 @@ postgrado_estadistica/
 │   ├── nginx.conf            # Servidor Nginx para rutas SPA
 │   └── Dockerfile            # Construcción multi-stage de producción
 │
-├── files/                    # Almacenamiento persistente
+├── files/                    # Almacenamiento local ignorado por Git
 │   └── storage/              # Banners, fotos y folletos subidos (.gitkeep)
 │
 ├── compose.yaml              # Especificación Docker Compose base
 ├── compose.local.yaml        # Mapeo de puertos para desarrollo local (3000 / 8080)
-├── .env.example              # Plantilla de variables de entorno lista para usar
+├── .env.example              # Plantilla sin secretos (completar antes de iniciar)
 ├── .gitignore                # Exclusiones de Git
 ├── DEPLOY.md                 # Guía para despliegue en servidor / Dokploy
 └── README.md                 # Este manual general de referencia

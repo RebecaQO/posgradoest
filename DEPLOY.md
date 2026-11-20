@@ -4,7 +4,7 @@ El repositorio contiene una API Laravel en `backend/` y un frontend React indepe
 
 ## Variables de entorno
 
-En Dokploy, configura estas variables para el proyecto Compose. Para desarrollo local, copia `.env.example` a `.env` y reemplaza los valores de ejemplo.
+En Dokploy, configura estas variables para el proyecto Compose. Para desarrollo local, copia `.env.example` a `.env`, genera `APP_KEY` y establece `DB_PASSWORD`. La plantilla deja esos dos valores vacíos deliberadamente; Compose no inicia hasta que estén configurados.
 
 - `APP_KEY`: clave Laravel segura, con prefijo `base64:`.
 - `APP_URL`: URL pública del backend.
@@ -29,7 +29,7 @@ Copia el resultado en `APP_KEY`. No publiques el archivo `.env` ni subas credenc
 4. Verifica que exista la red externa `dokploy-network` en el servidor Dokploy.
 5. Despliega. Compose construye `backend/Dockerfile`; al iniciar, la imagen ejecuta las migraciones Laravel.
 
-PostgreSQL no publica puertos al exterior y guarda sus datos en el volumen `db_data`. Los archivos públicos subidos por usuarios se conservan en `files/storage`.
+`compose.yaml` no publica puertos al host: Traefik/Dokploy enruta el tráfico a los puertos internos declarados con `expose`. PostgreSQL queda aislado en `backend-network` y guarda sus datos en el volumen nombrado `db_data`. Los archivos públicos se montan desde `../files/storage`, fuera del checkout desplegable. En el override local, los datos se guardan en `./files/storage`.
 
 ## Frontend
 
@@ -45,4 +45,12 @@ docker compose -f compose.yaml -f compose.local.yaml up -d --build
 
 Compose construye las imágenes independientes `portal-postgrado-api:latest` y `portal-postgrado-frontend:latest`. El portal queda en `http://localhost:3000` y la API en `http://localhost:8080` (`/up` para comprobar salud).
 
+Los puertos locales se enlazan solo a `127.0.0.1` mediante `compose.local.yaml`; ese archivo no se debe seleccionar en Dokploy.
+
 Para consultar registros localmente, ejecuta `docker compose -f compose.yaml -f compose.local.yaml logs -f app frontend`. En Dokploy, usa los logs del servicio `app`. La API expone la comprobación de salud Laravel en `/up`.
+
+## Repositorio de producción
+
+Este repositorio personal es candidato a revisión. El despliegue oficial debe hacerse desde el fork aprobado en `github.com/sociest`; las actualizaciones posteriores se proponen mediante pull requests a ese repositorio. No se deben copiar credenciales reales al repositorio ni desplegar desde una rama personal.
+
+La aplicación actualmente no envía mensajes de correo desde el servidor. Si se agrega esa funcionalidad, coordina un SMTP externo y configura sus credenciales en Dokploy, nunca en el código.
