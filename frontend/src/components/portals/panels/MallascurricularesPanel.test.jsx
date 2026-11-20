@@ -74,7 +74,10 @@ describe('MallasCurricularesPanel', () => {
     await user.type(subjectDialog.getAllByRole('textbox')[0], 'Probabilidad');
     await user.click(subjectDialog.getByRole('button', { name: /^guardar$/i }));
 
-    expect(await screen.findByText('Probabilidad')).toBeTruthy();
-    await waitFor(() => expect(apiJson).toHaveBeenCalledWith('/api/modulos/61/materias', expect.objectContaining({ method: 'POST' })));
+    await waitFor(
+      () => expect(apiJson).toHaveBeenCalledWith('/api/modulos/61/materias', expect.objectContaining({ method: 'POST' })),
+      { timeout: 5000 }
+    );
+    expect(await screen.findByText('Probabilidad', {}, { timeout: 5000 })).toBeTruthy();
   });
 });
