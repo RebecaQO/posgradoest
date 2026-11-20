@@ -29,6 +29,7 @@ export const Navbar = ({ currentTab, setCurrentTab, onOpenProgramDetail }) => {
   }, []);
 
   const navItems = [
+    { id: 'inicio', label: 'Inicio' },
     { id: 'institucion', label: 'Nuestra Institución' },
     { id: 'admision', label: 'Oferta Académica' },
     {

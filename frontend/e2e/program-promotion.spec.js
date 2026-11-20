@@ -72,4 +72,7 @@ test('contact view hides the channel strip and displays its editable heading', a
   await expect(page.getByText('Descripción administrable de las sedes.')).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Canales Oficiales de Atención' })).toHaveCount(0);
   await expect(page.locator('.cv-channels-section')).toHaveCount(0);
+
+  await page.getByRole('button', { name: 'Inicio' }).click();
+  await expect(page.getByRole('heading', { name: 'Unidad de Posgrado en Estadística' })).toBeVisible();
 });
