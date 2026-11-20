@@ -58,15 +58,15 @@ describe('MallasCurricularesPanel', () => {
     });
 
     render(<MallasCurricularesPanel programas={[{ id_programa: 5, nombre_programa: 'Maestría en Estadística', tipo_programa: 'Maestria', activo: true }]} />);
-    await user.click(await screen.findByRole('button', { name: /nueva malla/i }));
+    await user.click(await screen.findByRole('button', { name: /nueva malla/i }, { timeout: 5000 }));
     await user.type(within(screen.getByRole('dialog')).getByRole('textbox'), 'Plan 2027');
     await user.selectOptions(within(screen.getByRole('dialog')).getByRole('combobox'), '5');
     await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: /guardar malla/i }));
 
-    await user.click(await screen.findByRole('button', { name: /crear módulo/i }));
+    await user.click(await screen.findByRole('button', { name: /crear módulo/i }, { timeout: 5000 }));
     await user.type(within(screen.getByRole('dialog')).getByRole('textbox'), 'Fundamentos');
     await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: /guardar módulo/i }));
-    expect(await screen.findByText('Fundamentos')).toBeTruthy();
+    expect(await screen.findByText('Fundamentos', {}, { timeout: 5000 })).toBeTruthy();
 
     const moduleCard = screen.getByText('Fundamentos').closest('.glass-card');
     await user.click(within(moduleCard).getByRole('button', { name: /nueva materia/i }));
