@@ -68,6 +68,7 @@ import { ProgramEditorFixed } from './ProgramEditorFixed';
 import { EditionManager } from './EditionManager';
 import { ProgramOverview } from './ProgramOverview';
 import { apiJson } from '../../utils/api';
+import { useDialogAccessibility } from '../../hooks/useDialogAccessibility';
 import '../../styles/admin-portal.css';
 
 const driveImageUrl = (value) => {
@@ -104,7 +105,7 @@ export const AdminPortal = ({ onExitAdmin }) => {
     email_principal: 'estapost@fcpn.edu.bo',
     campus_virtual_url: 'https://maestria.estadistica.fcpn.edu.bo',
     telefono: '+591 (2) 279-2999',
-    whatsapp: '+591 76543210',
+    whatsapp: '',
     horario_atencion: 'Lunes a Viernes 08:30 - 18:30',
     director_nombre: 'Dirección de la Carrera de Estadística y Posgrado'
   });
@@ -159,8 +160,8 @@ export const AdminPortal = ({ onExitAdmin }) => {
     resolucion_hcu: 'Resolución HCU N° 284/2024 - Aprobación Plena UMSA',
     cupo_total: 25,
     enlace_convocatoria_drive: 'https://drive.google.com/drive/folders/1umsa_posgrado_estadistica_2026_convocatoria',
-    enlace_pdf_programa: 'https://drive.google.com/file/d/1_desc_programa_estadistica_fcpn_2026/view',
-    enlace_formulario_inscripcion: 'https://docs.google.com/forms/d/e/1FAIpQLSd_posgrado_estadistica_umsa_postulacion_2026/viewform',
+    enlace_pdf_programa: '',
+    enlace_formulario_inscripcion: '',
     descuento_contado_porcentaje: 10,
     numero_cuotas: 18,
     monto_cuota: 850,
@@ -223,6 +224,14 @@ export const AdminPortal = ({ onExitAdmin }) => {
     linkedin: '',
     orcid: ''
   });
+
+  const editionDialogRef = useDialogAccessibility(Boolean(edicionParaVer), () => setEdicionParaVer(null));
+  const moduleDialogRef = useDialogAccessibility(moduloModalOpen, () => setModuloModalOpen(false));
+  const subjectDialogRef = useDialogAccessibility(materiaModalOpen, () => setMateriaModalOpen(false));
+  const programDialogRef = useDialogAccessibility(programModalOpen, () => setProgramModalOpen(false));
+  const callDialogRef = useDialogAccessibility(convocatoriaModalOpen, () => setConvocatoriaModalOpen(false));
+  const userDialogRef = useDialogAccessibility(userModalOpen, () => setUserModalOpen(false));
+  const teacherDialogRef = useDialogAccessibility(docenteModalOpen, () => setDocenteModalOpen(false));
 
   const [feedbackMessage, setFeedbackMessage] = useState(null);
 
@@ -1625,7 +1634,7 @@ export const AdminPortal = ({ onExitAdmin }) => {
       {/* VISTA DE EDICIÓN VINCULADA A CONVOCATORIA */}
       {edicionParaVer && (
         <div className="modal-overlay" onClick={() => setEdicionParaVer(null)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '720px', maxHeight: '90vh', overflowY: 'auto' }}>
+          <div ref={editionDialogRef} role="dialog" aria-modal="true" aria-label="Información de la edición" tabIndex={-1} className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '720px', maxHeight: '90vh', overflowY: 'auto' }}>
             <div className="modal-header">
               <h3>Información de la edición</h3>
               <button type="button" className="modal-close-btn" onClick={() => setEdicionParaVer(null)} aria-label="Cerrar"><X size={18} /></button>
@@ -1664,12 +1673,12 @@ export const AdminPortal = ({ onExitAdmin }) => {
       {/* MODAL: CREAR MÓDULO */}
       {moduloModalOpen && (
         <div className="modal-overlay" onClick={() => setModuloModalOpen(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '480px' }}>
+          <div ref={moduleDialogRef} role="dialog" aria-modal="true" aria-label="Crear módulo académico" tabIndex={-1} className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '480px' }}>
             <div className="modal-header">
               <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--color-text-main)', margin: 0 }}>
                 Crear Nuevo Módulo Académico
               </h3>
-              <button className="modal-close-btn" onClick={() => setModuloModalOpen(false)}>
+              <button type="button" className="modal-close-btn" aria-label="Cerrar diálogo" onClick={() => setModuloModalOpen(false)}>
                 <X size={18} />
               </button>
             </div>
@@ -1703,12 +1712,12 @@ export const AdminPortal = ({ onExitAdmin }) => {
       {/* MODAL: AGREGAR MATERIA */}
       {materiaModalOpen && (
         <div className="modal-overlay" onClick={() => setMateriaModalOpen(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '580px' }}>
+          <div ref={subjectDialogRef} role="dialog" aria-modal="true" aria-label="Agregar o editar materia" tabIndex={-1} className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '580px' }}>
             <div className="modal-header">
               <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--color-text-main)', margin: 0 }}>
                 Agregar Asignatura / Materia
               </h3>
-              <button className="modal-close-btn" onClick={() => setMateriaModalOpen(false)}>
+              <button type="button" className="modal-close-btn" aria-label="Cerrar diálogo" onClick={() => setMateriaModalOpen(false)}>
                 <X size={18} />
               </button>
             </div>
@@ -1747,12 +1756,12 @@ export const AdminPortal = ({ onExitAdmin }) => {
       {/* MODAL: PROGRAM CRUD (CREAR / EDITAR) */}
       {programModalOpen && (
         <div className="modal-overlay" onClick={() => setProgramModalOpen(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '640px' }}>
+          <div ref={programDialogRef} role="dialog" aria-modal="true" aria-label={editingProgram ? 'Editar programa académico' : 'Crear programa académico'} tabIndex={-1} className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '640px' }}>
             <div className="modal-header">
               <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--color-text-main)', margin: 0 }}>
                 {editingProgram ? 'Editar Programa Académico' : 'Crear Nuevo Programa de Postgrado'}
               </h3>
-              <button className="modal-close-btn" onClick={() => setProgramModalOpen(false)}>
+              <button type="button" className="modal-close-btn" aria-label="Cerrar diálogo" onClick={() => setProgramModalOpen(false)}>
                 <X size={18} />
               </button>
             </div>
@@ -2022,12 +2031,12 @@ export const AdminPortal = ({ onExitAdmin }) => {
       {/* MODAL: CONVOCATORIA PASADA / HISTÓRICA */}
       {convocatoriaModalOpen && (
         <div className="modal-overlay" onClick={() => setConvocatoriaModalOpen(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '600px' }}>
+          <div ref={callDialogRef} role="dialog" aria-modal="true" aria-label="Editar convocatoria" tabIndex={-1} className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '600px' }}>
             <div className="modal-header">
               <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--color-text-main)', margin: 0 }}>
                 Registrar Convocatoria Histórica
               </h3>
-              <button className="modal-close-btn" onClick={() => setConvocatoriaModalOpen(false)}>
+              <button type="button" className="modal-close-btn" aria-label="Cerrar diálogo" onClick={() => setConvocatoriaModalOpen(false)}>
                 <X size={18} />
               </button>
             </div>
@@ -2171,12 +2180,12 @@ export const AdminPortal = ({ onExitAdmin }) => {
       {/* MODAL: CREAR USUARIO */}
       {userModalOpen && (
         <div className="modal-overlay" onClick={() => setUserModalOpen(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '520px' }}>
+          <div ref={userDialogRef} role="dialog" aria-modal="true" aria-label="Crear usuario" tabIndex={-1} className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '520px' }}>
             <div className="modal-header">
               <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--color-text-main)', margin: 0 }}>
                 Crear Nuevo Usuario
               </h3>
-              <button className="modal-close-btn" onClick={() => setUserModalOpen(false)}>
+              <button type="button" className="modal-close-btn" aria-label="Cerrar diálogo" onClick={() => setUserModalOpen(false)}>
                 <X size={18} />
               </button>
             </div>
@@ -2240,12 +2249,12 @@ export const AdminPortal = ({ onExitAdmin }) => {
       {/* MODAL: REGISTRAR / EDITAR DOCENTE */}
       {docenteModalOpen && (
         <div className="modal-overlay" onClick={() => setDocenteModalOpen(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '620px', maxHeight: '90vh', overflowY: 'auto' }}>
+          <div ref={teacherDialogRef} role="dialog" aria-modal="true" aria-label={editingDocente ? 'Editar docente' : 'Crear docente'} tabIndex={-1} className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '620px', maxHeight: '90vh', overflowY: 'auto' }}>
             <div className="modal-header">
               <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--color-text-main)', margin: 0 }}>
                 {editingDocente ? `Editar Docente: ${editingDocente.nombre_completo}` : 'Registrar Nuevo Docente'}
               </h3>
-              <button className="modal-close-btn" onClick={() => setDocenteModalOpen(false)}>
+              <button type="button" className="modal-close-btn" aria-label="Cerrar diálogo" onClick={() => setDocenteModalOpen(false)}>
                 <X size={18} />
               </button>
             </div>

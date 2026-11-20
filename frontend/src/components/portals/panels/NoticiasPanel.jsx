@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Newspaper, Plus, Save, Trash2, X } from 'lucide-react';
 import { apiJson } from '../../../utils/api';
+import { useDialogAccessibility } from '../../../hooks/useDialogAccessibility';
 
 const NUEVA_NOTICIA = {
   titulo: '',
@@ -28,6 +29,7 @@ export default function NoticiasPanel() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
+  const dialogRef = useDialogAccessibility(modalOpen, () => { if (!saving) setModalOpen(false); });
 
   const cargar = useCallback(async () => {
     setLoading(true);
@@ -125,9 +127,9 @@ export default function NoticiasPanel() {
 
       {modalOpen && (
         <div className="modal-overlay" onClick={() => !saving && setModalOpen(false)}>
-          <form className="modal-content" onSubmit={guardar} onClick={(event) => event.stopPropagation()} style={{ maxWidth: 760, padding: '1.5rem', maxHeight: '90vh', overflowY: 'auto' }}>
+          <form ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby="news-dialog-title" tabIndex={-1} className="modal-content" onSubmit={guardar} onClick={(event) => event.stopPropagation()} style={{ maxWidth: 760, padding: '1.5rem', maxHeight: '90vh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-              <h3 style={{ margin: 0 }}>{editingId ? 'Editar noticia' : 'Nueva noticia'}</h3>
+              <h3 id="news-dialog-title" style={{ margin: 0 }}>{editingId ? 'Editar noticia' : 'Nueva noticia'}</h3>
               <button type="button" className="btn btn-secondary btn-sm" onClick={() => setModalOpen(false)} disabled={saving} aria-label="Cerrar"><X size={16} /></button>
             </div>
             {error && <p role="alert" className="em-alert em-alert-error">{error}</p>}

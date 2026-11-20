@@ -14,12 +14,14 @@ import {
   Download
 } from 'lucide-react';
 import { programaService } from '../../services/programaService';
+import { useDialogAccessibility } from '../../hooks/useDialogAccessibility';
 
 export const ProgramDetailModal = ({ program: initialProgram, onClose, onApply }) => {
   const [activeTab, setActiveTab] = useState('perfil');
   const [programData, setProgramData] = useState(initialProgram);
   const [loading, setLoading] = useState(!initialProgram?.curriculum);
   const [docentesLoading, setDocentesLoading] = useState(true);
+  const dialogRef = useDialogAccessibility(Boolean(initialProgram), onClose);
 
   useEffect(() => {
     const targetId = initialProgram?.id_programa ?? initialProgram?.id;
@@ -127,6 +129,11 @@ export const ProgramDetailModal = ({ program: initialProgram, onClose, onApply }
     <div className="modal-overlay" onClick={onClose}>
       <div 
         className="modal-content modal-content-xl"
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="program-detail-dialog-title"
+        tabIndex={-1}
         onClick={(e) => e.stopPropagation()}
         style={{ maxWidth: '1060px', borderRadius: '12px', overflow: 'hidden' }}
       >
@@ -138,7 +145,9 @@ export const ProgramDetailModal = ({ program: initialProgram, onClose, onApply }
           position: 'relative'
         }}>
           <button
+            type="button"
             onClick={onClose}
+            aria-label="Cerrar detalles del programa"
             style={{
               position: 'absolute',
               top: '1rem',
@@ -172,7 +181,7 @@ export const ProgramDetailModal = ({ program: initialProgram, onClose, onApply }
             {isMaster ? 'Programa de Maestría' : 'Diplomado de Especialización'}
           </div>
 
-          <h2 style={{
+          <h2 id="program-detail-dialog-title" style={{
             fontSize: '1.5rem',
             fontWeight: 800,
             margin: 0,

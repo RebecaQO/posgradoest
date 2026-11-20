@@ -17,18 +17,17 @@ export const Footer = ({ onNavigate }) => {
   const [info, setInfo] = useState({
     direccion: 'Campus Universitario Cota Cota Calle 27, Edif. Estadística (2do Piso)',
     telefono: '+591 (2) 279-2999',
-    whatsapp: '+591 76543210',
+    whatsapp: '',
     email_principal: 'estapost@fcpn.edu.bo',
-    campus_virtual_url: 'https://maestria.estadistica.fcpn.edu.bo'
+    campus_virtual_url: ''
   });
 
   useEffect(() => {
     const fetchInfo = async () => {
       try {
-        const data = await institucionService.getInfo();
-        if (data && data.email_principal) {
-          setInfo(prev => ({ ...prev, ...data }));
-        }
+        const response = await institucionService.getInfo();
+        const data = response?.data || response;
+        if (data && typeof data === 'object') setInfo(prev => ({ ...prev, ...data }));
       } catch (err) {
         console.error('Error cargando info institucional en Footer:', err);
       }
@@ -46,7 +45,7 @@ export const Footer = ({ onNavigate }) => {
   };
 
   const linkStyle = {
-    color: 'rgba(255,255,255,0.7)',
+    color: '#d6e8df',
     textDecoration: 'none',
     fontSize: '0.85rem',
     transition: 'color 0.2s ease',
@@ -100,7 +99,7 @@ export const Footer = ({ onNavigate }) => {
                 <div style={{ fontSize: '0.92rem', fontWeight: 800, color: '#ffffff', lineHeight: 1.25 }}>
                   UMSA
                 </div>
-                <div style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.6)', fontWeight: 500 }}>
+                <div style={{ fontSize: '0.72rem', color: '#c4d6cd', fontWeight: 500 }}>
                   Postgrado · Estadística
                 </div>
               </div>
@@ -108,7 +107,7 @@ export const Footer = ({ onNavigate }) => {
             <p style={{
               fontSize: '0.82rem',
               lineHeight: 1.65,
-              color: 'rgba(255,255,255,0.55)',
+              color: '#c4d6cd',
               margin: '0 0 1.25rem 0'
             }}>
               Unidad de Postgrado de Estadística — Carrera de Estadística, FCPN.
@@ -118,10 +117,9 @@ export const Footer = ({ onNavigate }) => {
             {/* Redes Sociales */}
             <div style={{ display: 'flex', gap: '0.55rem' }}>
               {[
-                { href: 'https://facebook.com', label: 'Facebook', path: 'M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z', hoverBg: '#1877f2' },
-                { href: 'https://youtube.com', label: 'YouTube', path: 'M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z', hoverBg: '#ff0000' },
-                { href: 'https://linkedin.com', label: 'LinkedIn', path: 'M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z', hoverBg: '#0a66c2' },
-              ].map((social) => (
+                { href: info.facebook_url, label: 'Facebook', path: 'M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z', hoverBg: '#1877f2' },
+                { href: info.instagram_url, label: 'Instagram', path: 'M7 2h10a5 5 0 0 1 5 5v10a5 5 0 0 1-5 5H7a5 5 0 0 1-5-5V7a5 5 0 0 1 5-5zm0 2a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3V7a3 3 0 0 0-3-3H7zm5 3a5 5 0 1 1 0 10 5 5 0 0 1 0-10zm0 2a3 3 0 1 0 0 6 3 3 0 0 0 0-6zm5.5-3a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3z', hoverBg: '#c13584' },
+              ].filter((social) => social.href).map((social) => (
                 <a
                   key={social.label}
                   href={social.href}
@@ -164,19 +162,21 @@ export const Footer = ({ onNavigate }) => {
             <h4 style={headingStyle}>La Institución</h4>
             <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.55rem' }}>
               {[
-                { label: 'Dirección de Estadística', action: () => onNavigate('institucion') },
+                { label: 'Carrera de Estadística', href: info.estadistica_url },
+                { label: 'Revista Varianza (IETA)', href: info.revista_varianza_url },
+                { label: 'Sociedad de Estadística', href: info.sociest_url },
                 { label: 'Programas de Postgrado', action: () => onNavigate('programas') },
-                { label: 'Campus Virtual', href: info.campus_virtual_url, external: true },
-              ].map((item) => (
+                { label: 'Campus Virtual', href: info.campus_virtual_url },
+              ].filter((item) => item.href || item.action).map((item) => (
                 <li key={item.label}>
-                  {item.external ? (
+                  {item.href ? (
                     <a
                       href={item.href}
                       target="_blank"
                       rel="noreferrer"
                       style={linkStyle}
-                      onMouseEnter={(e) => e.currentTarget.style.color = '#4ade80'}
-                      onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(255,255,255,0.7)'}
+                      onMouseEnter={(e) => e.currentTarget.style.color = '#86efac'}
+                      onMouseLeave={(e) => e.currentTarget.style.color = '#d6e8df'}
                     >
                       <ExternalLink size={12} style={{ opacity: 0.5 }} />
                       <span>{item.label}</span>
@@ -186,8 +186,8 @@ export const Footer = ({ onNavigate }) => {
                       href="#"
                       onClick={(e) => { e.preventDefault(); item.action(); }}
                       style={linkStyle}
-                      onMouseEnter={(e) => e.currentTarget.style.color = '#4ade80'}
-                      onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(255,255,255,0.7)'}
+                      onMouseEnter={(e) => e.currentTarget.style.color = '#86efac'}
+                      onMouseLeave={(e) => e.currentTarget.style.color = '#d6e8df'}
                     >
                       <span>{item.label}</span>
                     </a>
@@ -201,12 +201,12 @@ export const Footer = ({ onNavigate }) => {
           <div>
             <h4 style={headingStyle}>¿Dónde Estamos?</h4>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', fontSize: '0.84rem' }}>
-              <div style={{ display: 'flex', gap: '0.5rem', color: 'rgba(255,255,255,0.65)' }}>
+              <div style={{ display: 'flex', gap: '0.5rem', color: '#d6e8df' }}>
                 <MapPin size={15} style={{ color: '#4ade80', flexShrink: 0, marginTop: '2px' }} />
                 <span>{info.direccion}</span>
               </div>
 
-              <div style={{ display: 'flex', gap: '0.5rem', color: 'rgba(255,255,255,0.65)' }}>
+              <div style={{ display: 'flex', gap: '0.5rem', color: '#d6e8df' }}>
                 <MapPin size={15} style={{ color: '#38bdf8', flexShrink: 0, marginTop: '2px' }} />
                 <span>Av. Villazón Nº 1995, Plaza del Bicentenario · Monoblock Central</span>
               </div>
@@ -220,8 +220,8 @@ export const Footer = ({ onNavigate }) => {
                 <span>{info.email_principal}</span>
               </a>
 
-              <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', color: 'rgba(255,255,255,0.65)' }}>
-                <Phone size={14} style={{ color: 'rgba(255,255,255,0.5)' }} />
+              <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', color: '#d6e8df' }}>
+                <Phone size={14} style={{ color: '#c4d6cd' }} />
                 <span>{info.telefono}</span>
               </div>
             </div>
@@ -232,15 +232,15 @@ export const Footer = ({ onNavigate }) => {
             <h4 style={headingStyle}>Escríbenos</h4>
 
             {/* WhatsApp */}
-            <a
-              href={`https://wa.me/59176543210?text=${encodeURIComponent('Hola, me interesa información sobre los programas de Postgrado en Estadística UMSA.')}`}
+            {String(info.whatsapp || '').replace(/\D/g, '').length >= 8 && <a
+              href={`https://wa.me/${String(info.whatsapp).replace(/\D/g, '')}?text=${encodeURIComponent('Hola, me interesa información sobre los programas de Postgrado en Estadística UMSA.')}`}
               target="_blank"
               rel="noreferrer"
               style={{
                 display: 'flex',
                 alignItems: 'center',
                 gap: '0.5rem',
-                background: '#25D366',
+                background: '#176b45',
                 color: '#ffffff',
                 padding: '0.55rem 1rem',
                 borderRadius: '6px',
@@ -252,22 +252,22 @@ export const Footer = ({ onNavigate }) => {
                 boxShadow: '0 3px 12px rgba(37, 211, 102, 0.25)'
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.background = '#1da855';
+                e.currentTarget.style.background = '#125236';
                 e.currentTarget.style.transform = 'translateY(-1px)';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.background = '#25D366';
+                e.currentTarget.style.background = '#176b45';
                 e.currentTarget.style.transform = 'translateY(0)';
               }}
             >
               <MessageCircle size={15} />
               <span>WhatsApp: {info.whatsapp}</span>
-            </a>
+            </a>}
 
             {/* Boletín */}
             <div style={{
               fontSize: '0.78rem',
-              color: 'rgba(255,255,255,0.5)',
+              color: '#c4d6cd',
               marginBottom: '0.65rem',
               fontWeight: 500
             }}>
@@ -336,7 +336,7 @@ export const Footer = ({ onNavigate }) => {
           flexWrap: 'wrap',
           gap: '0.75rem',
           fontSize: '0.75rem',
-          color: 'rgba(255,255,255,0.4)'
+              color: '#c4d6cd'
         }}>
           <span>
             © 2026 Unidad de Postgrado · Carrera de Estadística, FCPN – UMSA
@@ -346,9 +346,9 @@ export const Footer = ({ onNavigate }) => {
               href="http://www.ceub.edu.bo"
               target="_blank"
               rel="noreferrer"
-              style={{ color: 'rgba(255,255,255,0.45)', textDecoration: 'none', transition: 'color 0.2s' }}
-              onMouseEnter={(e) => e.currentTarget.style.color = 'rgba(255,255,255,0.8)'}
-              onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(255,255,255,0.45)'}
+              style={{ color: '#d6e8df', textDecoration: 'none', transition: 'color 0.2s' }}
+              onMouseEnter={(e) => e.currentTarget.style.color = '#86efac'}
+              onMouseLeave={(e) => e.currentTarget.style.color = '#d6e8df'}
             >
               Normativa CEUB
             </a>
@@ -356,18 +356,18 @@ export const Footer = ({ onNavigate }) => {
               href="https://repositorio.umsa.bo"
               target="_blank"
               rel="noreferrer"
-              style={{ color: 'rgba(255,255,255,0.45)', textDecoration: 'none', transition: 'color 0.2s' }}
-              onMouseEnter={(e) => e.currentTarget.style.color = 'rgba(255,255,255,0.8)'}
-              onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(255,255,255,0.45)'}
+              style={{ color: '#d6e8df', textDecoration: 'none', transition: 'color 0.2s' }}
+              onMouseEnter={(e) => e.currentTarget.style.color = '#86efac'}
+              onMouseLeave={(e) => e.currentTarget.style.color = '#d6e8df'}
             >
               Repositorio UMSA
             </a>
             <a
               href="#"
               onClick={(e) => { e.preventDefault(); onNavigate('normativa'); }}
-              style={{ color: 'rgba(255,255,255,0.45)', textDecoration: 'none', transition: 'color 0.2s' }}
-              onMouseEnter={(e) => e.currentTarget.style.color = 'rgba(255,255,255,0.8)'}
-              onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(255,255,255,0.45)'}
+              style={{ color: '#d6e8df', textDecoration: 'none', transition: 'color 0.2s' }}
+              onMouseEnter={(e) => e.currentTarget.style.color = '#86efac'}
+              onMouseLeave={(e) => e.currentTarget.style.color = '#d6e8df'}
             >
               Transparencia
             </a>

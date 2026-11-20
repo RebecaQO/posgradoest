@@ -45,6 +45,7 @@ class ProgramaPostgradoController extends Controller
                             'malla.modulos.materias.materia',
 
                             // Materias de diplomado.
+                            'malla.materiasDiplomado.materia',
 
                             // Docentes asignados a la edicion.
                             'docentes',
@@ -92,6 +93,7 @@ class ProgramaPostgradoController extends Controller
             'maestria',
             'diplomado',
             'mallas.modulos.materias.materia',
+            'mallas.materiasDiplomado.materia',
             'ediciones.docentes',
         ]);
 

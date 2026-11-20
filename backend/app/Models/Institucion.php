@@ -17,6 +17,11 @@ class Institucion extends Model
         'horarios_atencion',
         'director',
         'campus_virtual_url',
+        'revista_varianza_url',
+        'estadistica_url',
+        'sociest_url',
+        'facebook_url',
+        'instagram_url',
         'descripcion_ieta',
         'descripcion_club',
     ];

@@ -5,7 +5,7 @@ import { institucionService } from '../../services/institucionService';
 export const TopBar = () => {
   const [info, setInfo] = useState({
     telefono: '+591 (2) 279-2999',
-    whatsapp: '+591 76543210',
+    whatsapp: '',
     email_principal: 'estapost@fcpn.edu.bo',
     campus_virtual_url: 'https://maestria.estadistica.fcpn.edu.bo'
   });
@@ -24,7 +24,7 @@ export const TopBar = () => {
     fetchInfo();
   }, []);
 
-  const cleanWhatsapp = (info.whatsapp || '59176543210').replace(/\D/g, '');
+  const cleanWhatsapp = String(info.whatsapp || '').replace(/\D/g, '');
 
   return (
     <div style={{
@@ -105,7 +105,7 @@ export const TopBar = () => {
             <ExternalLink size={11} style={{ opacity: 0.8 }} />
           </a>
 
-          <a
+          {cleanWhatsapp.length >= 8 && <a
             href={`https://wa.me/${cleanWhatsapp}?text=Hola,%20deseo%20información%20sobre%20los%20programas%20de%20Posgrado%20en%20Estadística%20UMSA`}
             target="_blank"
             rel="noreferrer"
@@ -123,7 +123,7 @@ export const TopBar = () => {
           >
             <MessageCircle size={14} />
             <span>WhatsApp</span>
-          </a>
+          </a>}
         </div>
       </div>
 

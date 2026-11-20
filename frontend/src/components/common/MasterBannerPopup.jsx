@@ -9,6 +9,8 @@ import {
 
 import cienciaBanner from '../../assets/images/banner/banner_maestria_datos.png';
 import { programaService } from '../../services/programaService';
+import { useInstitutionWhatsApp } from '../../hooks/useInstitutionWhatsApp';
+import { useDialogAccessibility } from '../../hooks/useDialogAccessibility';
 
 export const MasterBannerPopup = ({ onNavigateToProgram }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -70,6 +72,8 @@ export const MasterBannerPopup = ({ onNavigateToProgram }) => {
     }
   };
 
+  const dialogRef = useDialogAccessibility(isOpen, handleClose);
+
   const nextSlide = (e) => {
     e?.stopPropagation();
     setActiveSlide((prev) => (prev + 1) % banners.length);
@@ -80,9 +84,7 @@ export const MasterBannerPopup = ({ onNavigateToProgram }) => {
     setActiveSlide((prev) => (prev - 1 + banners.length) % banners.length);
   };
 
-  const whatsappUrl = `https://wa.me/59176543210?text=${encodeURIComponent(
-    'Hola, deseo información sobre la Maestría en Ciencia y Análisis de Datos, II versión 2025–2026, actualmente en curso.'
-  )}`;
+  const whatsappUrl = useInstitutionWhatsApp('Hola, deseo información sobre la Maestría en Ciencia y Análisis de Datos.');
 
   return (
     <>
@@ -107,6 +109,11 @@ export const MasterBannerPopup = ({ onNavigateToProgram }) => {
         >
           <div
             className="master-popup-card"
+            ref={dialogRef}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Convocatoria de maestría"
+            tabIndex={-1}
             onClick={(e) => e.stopPropagation()}
             style={{
               position: 'relative',
@@ -160,9 +167,11 @@ export const MasterBannerPopup = ({ onNavigateToProgram }) => {
             </button>
 
             {/* ── EL BANNER (Al hacer clic redirige directo al programa) ── */}
-            <div
+            <button
+              type="button"
               onClick={handleGoToProgram}
               title="Haz clic en el banner para ver la maestría en detalle"
+              aria-label="Ver detalles de la maestría"
               style={{
                 position: 'relative',
                 cursor: 'pointer',
@@ -270,7 +279,7 @@ export const MasterBannerPopup = ({ onNavigateToProgram }) => {
                           width: activeSlide === idx ? '18px' : '7px',
                           height: '7px',
                           borderRadius: '99px',
-                          background: activeSlide === idx ? '#25D366' : 'rgba(255, 255, 255, 0.5)',
+                          background: activeSlide === idx ? '#176b45' : 'rgba(255, 255, 255, 0.5)',
                           cursor: 'pointer',
                           transition: 'all 0.2s ease'
                         }}
@@ -279,7 +288,7 @@ export const MasterBannerPopup = ({ onNavigateToProgram }) => {
                   </div>
                 </>
               )}
-            </div>
+            </button>
 
             {/* ── BOTÓN ÚNICO: CONSULTAR A WHATSAPP (PEQUEÑO Y SIN FOSFORESCENTE) ── */}
             <div style={{
@@ -290,11 +299,11 @@ export const MasterBannerPopup = ({ onNavigateToProgram }) => {
               justifyContent: 'center'
             }}>
               <a
-                href={whatsappUrl}
+                href={whatsappUrl || undefined}
                 target="_blank"
                 rel="noreferrer"
                 style={{
-                  background: '#25D366',
+                  background: '#176b45',
                   color: '#FFFFFF',
                   borderRadius: '6px',
                   padding: '0.42rem 1.05rem',
@@ -309,11 +318,11 @@ export const MasterBannerPopup = ({ onNavigateToProgram }) => {
                   transition: 'background 0.18s ease, transform 0.15s ease'
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.background = '#20BA5A';
+                  e.currentTarget.style.background = '#125236';
                   e.currentTarget.style.transform = 'translateY(-1px)';
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.background = '#25D366';
+                  e.currentTarget.style.background = '#176b45';
                   e.currentTarget.style.transform = 'translateY(0)';
                 }}
               >

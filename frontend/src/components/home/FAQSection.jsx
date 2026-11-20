@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useInstitutionWhatsApp } from '../../hooks/useInstitutionWhatsApp';
 import {
   MessageCircle,
   Plus,
@@ -7,13 +8,11 @@ import {
   Users,
   Calendar,
   HelpCircle,
-  FileText,
   Clock,
   Laptop,
   Database,
   Award,
   Briefcase,
-  GraduationCap
 } from 'lucide-react';
 
 const faqs = [
@@ -24,22 +23,10 @@ const faqs = [
     answer: 'La tercera versión tiene actividades académicas programadas desde abril de 2027 hasta enero de 2029 aproximadamente 20 meses, equivalentes a un año y ocho meses. A este periodo se añade el tiempo previsto por la normativa para la tesis de maestría.',
   },
   {
-    icon: GraduationCap,
-    category: 'Perfil de Postulación',
-    question: '¿Quiénes pueden postular a la maestría?',
-    answer: 'La preinscripción solicita título académico y título profesional. El programa tiene orientación multidisciplinaria; la información consultada no establece una lista cerrada de carreras admitidas. La aceptación se comunica después de revisar la postulación.',
-  },
-  {
     icon: Laptop,
     category: 'Modalidad de Estudio',
     question: '¿Cuál es la modalidad de estudio?',
     answer: 'La modalidad publicada es semipresencial. Algunas materias serán 100% virtual y otras combinadas hibridas.',
-  },
-  {
-    icon: FileText,
-    category: 'Requisitos & Documentos',
-    question: '¿Qué documentos se necesitan para postular?',
-    answer: 'Se solicitan copias escaneadas del título académico, título profesional, hoja de vida resumida y cédula de identidad por ambos lados. Después de la admisión se indican los documentos que deben presentarse físicamente.',
   },
   {
     icon: Database,
@@ -69,9 +56,7 @@ const faqs = [
 
 const categoryColors = {
   'Duración & Calendario':       { bg: '#edf4f9', text: '#31698a', dot: '#31698a' },
-  'Perfil de Postulación':       { bg: '#f5f0fa', text: '#6b46c1', dot: '#6b46c1' },
   'Modalidad de Estudio':        { bg: '#f0f4ff', text: '#2b5ea7', dot: '#2b5ea7' },
-  'Requisitos & Documentos':     { bg: '#eaf5ec', text: '#267342', dot: '#267342' },
   'Plan & Conocimientos':        { bg: '#fef3e7', text: '#b45309', dot: '#b45309' },
   'Horarios de Clases':          { bg: '#e6f7f5', text: '#0e7c7c', dot: '#0e7c7c' },
   'Titulación & Certificaciones': { bg: '#fdf6e6', text: '#92600b', dot: '#92600b' },
@@ -206,6 +191,7 @@ const FAQItem = ({ faq, isOpen, onToggle, index }) => {
 
 export const FAQSection = () => {
   const [openIdx, setOpenIdx] = useState(0);
+  const whatsappUrl = useInstitutionWhatsApp('Hola, tengo una consulta sobre los programas de Posgrado en Estadística UMSA.');
 
   const toggle = (idx) => setOpenIdx(openIdx === idx ? null : idx);
 
@@ -311,14 +297,15 @@ export const FAQSection = () => {
             ¿Tienes más preguntas? Escríbenos por WhatsApp y te respondemos de inmediato.
           </p>
           <a
-            href="https://wa.me/59176543210?text=Hola%2C%20tengo%20una%20consulta%20sobre%20los%20programas%20de%20Posgrado%20en%20Estadística%20UMSA"
+            href={whatsappUrl || undefined}
+            aria-disabled={!whatsappUrl}
             target="_blank"
             rel="noreferrer"
             style={{
               display: 'inline-flex',
               alignItems: 'center',
               gap: '0.6rem',
-              background: '#25D366',
+              background: '#176b45',
               color: '#ffffff',
               border: 'none',
               borderRadius: '99px',

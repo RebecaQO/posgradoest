@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { ArrowRight, BookOpen, CalendarDays, MessageCircle, Users } from 'lucide-react';
 import { programaService } from '../../services/programaService';
 import cienciaBanner from '../../assets/images/banner/banner_maestria_datos.png';
+import { useInstitutionWhatsApp } from '../../hooks/useInstitutionWhatsApp';
 
 const meaningful = (value) => {
   if (typeof value !== 'string') return '';
@@ -120,7 +121,7 @@ export const PromotionalBannerSection = ({ onSelectProgram }) => {
 
   const programTitle = titleCaseProgram(meaningful(targetProgram?.nombre_programa || targetProgram?.title) || 'Oferta de Maestría');
   const programType = (targetProgram?.tipo_programa || targetProgram?.type || '').toLowerCase().includes('maestr') ? 'Maestría' : 'Diplomado';
-  const whatsappMessage = encodeURIComponent(`Hola, deseo información sobre ${programTitle}${activeEdition?.nombre_edicion ? `, ${activeEdition.nombre_edicion}` : ''}.`);
+  const whatsappUrl = useInstitutionWhatsApp(`Hola, deseo información sobre ${programTitle}${activeEdition?.nombre_edicion ? `, ${activeEdition.nombre_edicion}` : ''}.`);
 
   return (
     <section
@@ -300,7 +301,8 @@ export const PromotionalBannerSection = ({ onSelectProgram }) => {
             </button>
 
             <a
-              href={`https://wa.me/59176543210?text=${whatsappMessage}`}
+              href={whatsappUrl || undefined}
+              aria-disabled={!whatsappUrl}
               target="_blank"
               rel="noreferrer"
               style={{

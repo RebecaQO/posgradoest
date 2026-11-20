@@ -1,6 +1,5 @@
-import React, { useState } from 'react';
+import React, { lazy, Suspense, useState } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
-import { ApplicantsProvider } from './context/ApplicantsContext';
 import { Navbar } from './components/layout/Navbar';
 import { Footer } from './components/layout/Footer';
 import { AdminLoginView } from './components/auth/AdminLoginView';
@@ -13,16 +12,15 @@ import { ImpactSection } from './components/home/ImpactSection';
 import { EventsSection } from './components/home/EventsSection';
 import { MasterBannerPopup } from './components/common/MasterBannerPopup';
 
-import { InstitutionView } from './components/institution/InstitutionView';
-import { ProgramsView } from './components/programs/ProgramsView';
-import { ProgramDetailModal } from './components/programs/ProgramDetailModal';
-import { ProgramDetailView } from './components/programs/ProgramDetailView';
-import { AdmissionView } from './components/admission/AdmissionView';
-import { RegulationsView } from './components/regulations/RegulationsView';
-import { NewsView } from './components/news/NewsView';
-import { ContactView } from './components/contact/ContactView';
-
-import { AdminPortal } from './components/portals/AdminPortal';
+const InstitutionView = lazy(() => import('./components/institution/InstitutionView').then((m) => ({ default: m.InstitutionView })));
+const ProgramsView = lazy(() => import('./components/programs/ProgramsView').then((m) => ({ default: m.ProgramsView })));
+const ProgramDetailModal = lazy(() => import('./components/programs/ProgramDetailModal').then((m) => ({ default: m.ProgramDetailModal })));
+const ProgramDetailView = lazy(() => import('./components/programs/ProgramDetailView').then((m) => ({ default: m.ProgramDetailView })));
+const AdmissionView = lazy(() => import('./components/admission/AdmissionView').then((m) => ({ default: m.AdmissionView })));
+const RegulationsView = lazy(() => import('./components/regulations/RegulationsView').then((m) => ({ default: m.RegulationsView })));
+const NewsView = lazy(() => import('./components/news/NewsView').then((m) => ({ default: m.NewsView })));
+const ContactView = lazy(() => import('./components/contact/ContactView').then((m) => ({ default: m.ContactView })));
+const AdminPortal = lazy(() => import('./components/portals/AdminPortal').then((m) => ({ default: m.AdminPortal })));
 
 import './styles/index.css';
 import './styles/components.css';
@@ -41,6 +39,9 @@ const getInitialHashState = () => {
   if (hash === '#programas' || hash === '#/programas') {
     return { tab: 'programas', programId: null };
   }
+  if (hash === '#admision' || hash === '#/admision') {
+    return { tab: 'admision', programId: null };
+  }
   return { tab: 'inicio', programId: null };
 };
 
@@ -54,6 +55,10 @@ const MainApp = () => {
   const { currentUser, logout } = useAuth();
 
   React.useEffect(() => {
+    try { window.localStorage.removeItem('posgrado_umsa_applicants'); } catch { /* El almacenamiento local puede estar bloqueado por el navegador. */ }
+  }, []);
+
+  React.useEffect(() => {
     const handleHash = () => {
       const hash = window.location.hash || '';
       if (hash.startsWith('#programa/') || hash.startsWith('#/programa/')) {
@@ -65,6 +70,8 @@ const MainApp = () => {
         }
       } else if (hash === '#programas' || hash === '#/programas') {
         setCurrentTab('programas');
+      } else if (hash === '#admision' || hash === '#/admision') {
+        setCurrentTab('admision');
       } else if (hash === '#admin' || hash === '#/admin') {
         setCurrentTab(currentUser ? 'portal-admin' : 'admin-login');
       } else if (hash === '#admin/panel' || hash === '#/admin/panel') {
@@ -111,14 +118,14 @@ const MainApp = () => {
   // MODO ADMIN: pantalla completa sin navbar/footer publicos
   if (currentTab === 'portal-admin' && currentUser) {
     return (
-      <AdminPortal
+      <Suspense fallback={<div role="status" className="container">Cargando panel administrativo…</div>}><AdminPortal
         onExitAdmin={async () => {
           await logout();
           setCurrentTab('inicio');
           window.location.hash = '';
           window.scrollTo({ top: 0, behavior: 'smooth' });
         }}
-      />
+      /></Suspense>
     );
   }
 
@@ -141,7 +148,7 @@ const MainApp = () => {
         onOpenProgramDetail={handleOpenProgramDetail}
       />
 
-      <main id="main" className="site-main">
+      <Suspense fallback={<div role="status" className="container" style={{ padding: '3rem 1rem' }}>Cargando contenido…</div>}><main id="main" className="site-main">
         {currentTab === 'inicio' && (
           <div className="animate-fade-in">
             <HeroSection onNavigate={setCurrentTab} onFilterPrograms={handleFilterPrograms} />
@@ -169,16 +176,16 @@ const MainApp = () => {
         {currentTab === 'normativa' && <RegulationsView />}
         {currentTab === 'noticias' && <NewsView />}
         {currentTab === 'contacto' && <ContactView />}
-      </main>
+      </main></Suspense>
 
       <Footer onNavigate={(tab) => { if (window.location.hash.startsWith('#programa/')) window.location.hash = ''; setCurrentTab(tab); }} />
-      {selectedProgramModal && (
+      <Suspense fallback={null}>{selectedProgramModal && (
         <ProgramDetailModal
           program={selectedProgramModal}
           onClose={() => setSelectedProgramModal(null)}
           onApply={(progId) => { setSelectedProgramModal(null); handleNavigateToAdmission(progId); }}
         />
-      )}
+      )}</Suspense>
       <MasterBannerPopup onNavigateToProgram={handleOpenProgramDetail} />
     </div>
   );
@@ -187,9 +194,7 @@ const MainApp = () => {
 export default function App() {
   return (
     <AuthProvider>
-      <ApplicantsProvider>
-        <MainApp />
-      </ApplicantsProvider>
+      <MainApp />
     </AuthProvider>
   );
 }

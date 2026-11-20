@@ -46,6 +46,11 @@ class UpdateInstitucionRequest extends FormRequest
             'horarios_atencion' => 'nullable|string|max:255',
             'director' => 'nullable|string|max:255',
             'campus_virtual_url' => 'nullable|url|max:500',
+            'revista_varianza_url' => 'nullable|url|max:500',
+            'estadistica_url' => 'nullable|url|max:500',
+            'sociest_url' => 'nullable|url|max:500',
+            'facebook_url' => 'nullable|url|max:500',
+            'instagram_url' => 'nullable|url|max:500',
             'descripcion_ieta' => 'nullable|string',
             'descripcion_club' => 'nullable|string',
         ];

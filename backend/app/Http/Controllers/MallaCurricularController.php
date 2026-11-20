@@ -30,6 +30,8 @@ class MallaCurricularController extends Controller
         $malla = MallaCurricular::with([
             'programa',
             'ediciones',
+            'modulos.materias.materia',
+            'materiasDiplomado.materia',
         ])->find($id);
 
         if (!$malla) {

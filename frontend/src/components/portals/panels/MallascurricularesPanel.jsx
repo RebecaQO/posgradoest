@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { ArrowLeft, BookOpen, CheckCircle2, ChevronRight, Edit2, Eye, Layers, Plus, RefreshCw, Save, Search, UserX, Trash2, RotateCcw, X } from 'lucide-react';
 import { apiJson } from '../../../utils/api';
+import { useDialogAccessibility } from '../../../hooks/useDialogAccessibility';
 
 // Las respuestas de algunas rutas pueden venir como { success, data }.
 const extraer = (respuesta) => respuesta?.data ?? respuesta;
@@ -43,6 +44,9 @@ export default function MallasCurricularesPanel({ programas = [], onMallasChange
   const [guardando, setGuardando] = useState(false);
   const [aviso, setAviso] = useState('');
   const [error, setError] = useState('');
+  const mallaDialogRef = useDialogAccessibility(Boolean(modalMalla), () => setModalMalla(null));
+  const moduleDialogRef = useDialogAccessibility(Boolean(modalModulo), () => setModalModulo(null));
+  const subjectDialogRef = useDialogAccessibility(Boolean(modalMateria), () => setModalMateria(null));
 
   const programasPorId = useMemo(() => new Map(programas.map(p => [String(p.id_programa ?? p.id), p])), [programas]);
   const programaDe = (malla) => malla?.programa || programasPorId.get(String(malla?.id_programa));
@@ -299,8 +303,8 @@ export default function MallasCurricularesPanel({ programas = [], onMallasChange
         </tr>)}</tbody></table></div>}
     </>}
 
-    {modalMalla && <div className="modal-overlay" onClick={() => setModalMalla(null)}><div className="modal-content" style={{ maxWidth: 560 }} onClick={e => e.stopPropagation()}>
-      <div className="modal-header"><h3>{modalMalla === 'crear' ? 'Nueva malla curricular' : 'Editar malla curricular'}</h3><button type="button" className="modal-close-btn" onClick={() => setModalMalla(null)}><X size={18}/></button></div>
+    {modalMalla && <div className="modal-overlay" onClick={() => setModalMalla(null)}><div ref={mallaDialogRef} role="dialog" aria-modal="true" aria-labelledby="malla-dialog-title" tabIndex={-1} className="modal-content" style={{ maxWidth: 560 }} onClick={e => e.stopPropagation()}>
+      <div className="modal-header"><h3 id="malla-dialog-title">{modalMalla === 'crear' ? 'Nueva malla curricular' : 'Editar malla curricular'}</h3><button type="button" aria-label="Cerrar diálogo" className="modal-close-btn" onClick={() => setModalMalla(null)}><X size={18}/></button></div>
       <form className="modal-body" onSubmit={guardarMalla}><label className="form-label">Nombre de la malla curricular</label>
         <input className="form-input" maxLength={150} required value={formMalla.nombre_malla} onChange={e => setFormMalla({ ...formMalla, nombre_malla: e.target.value })} />
         <label className="form-label" style={{ marginTop: 14 }}>Programa académico</label>
@@ -311,15 +315,15 @@ export default function MallasCurricularesPanel({ programas = [], onMallasChange
         <div style={{ display: 'flex', gap: 10, justifyContent: 'end', marginTop: 22 }}>{boton(() => setModalMalla(null), 'Cancelar', X)}<button type="submit" disabled={guardando} className="btn btn-primary"><Save size={16}/> Guardar malla</button></div>
       </form></div></div>}
 
-    {modalModulo && <div className="modal-overlay" onClick={() => setModalModulo(null)}><div className="modal-content" style={{ maxWidth: 520 }} onClick={e => e.stopPropagation()}>
-      <div className="modal-header"><h3>{modalModulo === 'crear' ? 'Crear módulo' : 'Editar módulo'}</h3><button type="button" className="modal-close-btn" onClick={() => setModalModulo(null)}><X size={18}/></button></div>
+    {modalModulo && <div className="modal-overlay" onClick={() => setModalModulo(null)}><div ref={moduleDialogRef} role="dialog" aria-modal="true" aria-labelledby="module-dialog-title" tabIndex={-1} className="modal-content" style={{ maxWidth: 520 }} onClick={e => e.stopPropagation()}>
+      <div className="modal-header"><h3 id="module-dialog-title">{modalModulo === 'crear' ? 'Crear módulo' : 'Editar módulo'}</h3><button type="button" aria-label="Cerrar diálogo" className="modal-close-btn" onClick={() => setModalModulo(null)}><X size={18}/></button></div>
       <form className="modal-body" onSubmit={guardarModulo}><label className="form-label">Nombre del módulo</label><input className="form-input" maxLength={150} required value={formModulo.nombre_mod} onChange={e => setFormModulo({ ...formModulo, nombre_mod: e.target.value })} />
         <div style={{ display: 'flex', gap: 10, justifyContent: 'end', marginTop: 20 }}>{boton(() => setModalModulo(null), 'Cancelar', X)}<button disabled={guardando} type="submit" className="btn btn-primary"><Save size={16}/> Guardar módulo</button></div>
       </form></div></div>}
 
 
-    {modalMateria && <div className="modal-overlay" onClick={() => setModalMateria(null)}><div className="modal-content" style={{ maxWidth: 570, maxHeight: '90vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
-      <div className="modal-header"><h3>{modalMateria === 'editar' ? 'Editar materia' : modalMateria === 'asignar' ? 'Asignar materia existente' : 'Crear y asignar materia'}</h3><button type="button" className="modal-close-btn" onClick={() => setModalMateria(null)}><X size={18}/></button></div>
+    {modalMateria && <div className="modal-overlay" onClick={() => setModalMateria(null)}><div ref={subjectDialogRef} role="dialog" aria-modal="true" aria-labelledby="subject-dialog-title" tabIndex={-1} className="modal-content" style={{ maxWidth: 570, maxHeight: '90vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
+      <div className="modal-header"><h3 id="subject-dialog-title">{modalMateria === 'editar' ? 'Editar materia' : modalMateria === 'asignar' ? 'Asignar materia existente' : 'Crear y asignar materia'}</h3><button type="button" aria-label="Cerrar diálogo" className="modal-close-btn" onClick={() => setModalMateria(null)}><X size={18}/></button></div>
       <form className="modal-body" onSubmit={guardarMateria}>
         {modalMateria === 'asignar' ? <><label className="form-label">Materia existente de {maestriaSeleccionada ? 'maestría' : 'diplomado'}</label>
           <select required className="form-select" value={formMateria.id_mat} onChange={e => setFormMateria({ ...formMateria, id_mat: e.target.value })}><option value="">Selecciona una materia...</option>

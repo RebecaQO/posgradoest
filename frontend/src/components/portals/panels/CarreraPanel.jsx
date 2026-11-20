@@ -13,6 +13,7 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import { apiJson } from '../../../utils/api';
+import { invalidateInstitutionInfo } from '../../../hooks/useInstitutionWhatsApp';
 
 export default function CarreraPanel() {
   const [form, setForm] = useState({
@@ -24,6 +25,11 @@ export default function CarreraPanel() {
     horarios_atencion: '',
     director: '',
     campus_virtual_url: '',
+    revista_varianza_url: '',
+    estadistica_url: '',
+    sociest_url: '',
+    facebook_url: '',
+    instagram_url: '',
   });
 
   const [loading, setLoading] = useState(true);
@@ -47,6 +53,11 @@ export default function CarreraPanel() {
         horarios_atencion: info.horarios_atencion || info.horario_atencion || '',
         director: info.director || info.director_nombre || '',
         campus_virtual_url: info.campus_virtual_url || '',
+        revista_varianza_url: info.revista_varianza_url || '',
+        estadistica_url: info.estadistica_url || '',
+        sociest_url: info.sociest_url || '',
+        facebook_url: info.facebook_url || '',
+        instagram_url: info.instagram_url || '',
       });
     } catch (err) {
       if (err.status === 403) {
@@ -86,6 +97,7 @@ export default function CarreraPanel() {
         method: 'PUT',
         body: form,
       });
+      invalidateInstitutionInfo();
       const info = updated.data || updated;
       setForm({
         nombre_carrera: info.nombre_carrera || '',
@@ -96,6 +108,11 @@ export default function CarreraPanel() {
         horarios_atencion: info.horarios_atencion || info.horario_atencion || '',
         director: info.director || info.director_nombre || '',
         campus_virtual_url: info.campus_virtual_url || '',
+        revista_varianza_url: info.revista_varianza_url || '',
+        estadistica_url: info.estadistica_url || '',
+        sociest_url: info.sociest_url || '',
+        facebook_url: info.facebook_url || '',
+        instagram_url: info.instagram_url || '',
       });
       setSuccess('Información institucional actualizada exitosamente.');
       setTimeout(() => setSuccess(null), 4000);
@@ -251,7 +268,7 @@ export default function CarreraPanel() {
               value={form.whatsapp}
               onChange={(e) => handleChange('whatsapp', e.target.value)}
               className="form-input"
-              placeholder="+591 76543210"
+              placeholder="Número con código de país"
             />
             {fieldErrors.whatsapp && (
               <p style={{ color: '#ef4444', fontSize: '0.8rem', margin: '0.25rem 0 0' }}>
@@ -319,6 +336,23 @@ export default function CarreraPanel() {
               </p>
             )}
           </div>
+
+          <div style={{ gridColumn: '1 / -1', borderTop: '1px solid var(--color-border)', paddingTop: '1.25rem' }}>
+            <h4 style={{ margin: '0 0 1rem', color: 'var(--color-text-main)' }}>Enlaces públicos del pie de página</h4>
+          </div>
+          {[
+            ['revista_varianza_url', 'Revista Varianza (IETA)', 'https://ieta.umsa.bo/sobre-la-revista-varianza'],
+            ['estadistica_url', 'Carrera de Estadística', 'https://estadistica.umsa.bo/'],
+            ['sociest_url', 'Sociedad de Estadística', 'https://www.sociest.org/?m=1'],
+            ['facebook_url', 'Facebook institucional', 'https://www.facebook.com/share/...'],
+            ['instagram_url', 'Instagram institucional', 'https://www.instagram.com/...'],
+          ].map(([field, label, placeholder]) => (
+            <div className="form-group" key={field}>
+              <label className="form-label" style={{ fontWeight: 600 }}>{label}</label>
+              <input type="url" value={form[field]} onChange={(e) => handleChange(field, e.target.value)} className="form-input" placeholder={placeholder} />
+              {fieldErrors[field] && <p style={{ color: '#ef4444', fontSize: '0.8rem', margin: '0.25rem 0 0' }}>{fieldErrors[field][0]}</p>}
+            </div>
+          ))}
 
         </div>
 

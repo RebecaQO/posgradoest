@@ -9,6 +9,7 @@ import {
   GraduationCap
 } from 'lucide-react';
 import { programaService } from '../../services/programaService';
+import { useInstitutionWhatsApp } from '../../hooks/useInstitutionWhatsApp';
 
 import slide1 from '../../assets/images/carrusel/slide1.jpg';
 import slide2 from '../../assets/images/carrusel/slide2.jpg';
@@ -41,6 +42,7 @@ const getProgramCardBanner = (prog, idx) => {
 };
 
 export const FeaturedPrograms = ({ onSelectProgram }) => {
+  const whatsappUrl = useInstitutionWhatsApp('Hola, deseo información y consultar sobre la postulación a los programas de Posgrado en Estadística UMSA.');
   const [programs, setPrograms] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -312,11 +314,12 @@ export const FeaturedPrograms = ({ onSelectProgram }) => {
 
                     {/* Derivar a WhatsApp */}
                     <a
-                      href={`https://wa.me/59176543210?text=${encodeURIComponent(`Hola, deseo más información y consultar sobre la postulación al programa: ${prog.title}`)}`}
+                      href={whatsappUrl || undefined}
+                      aria-disabled={!whatsappUrl}
                       target="_blank"
                       rel="noreferrer"
                       style={{
-                        background: '#25D366',
+                        background: '#176b45',
                         color: '#FFFFFF',
                         border: 'none',
                         borderRadius: '6px',
@@ -333,11 +336,11 @@ export const FeaturedPrograms = ({ onSelectProgram }) => {
                         transition: 'background 0.18s ease, transform 0.15s ease',
                       }}
                       onMouseEnter={(e) => {
-                        e.currentTarget.style.background = '#20BA5A';
+                        e.currentTarget.style.background = '#125236';
                         e.currentTarget.style.transform = 'translateY(-1px)';
                       }}
                       onMouseLeave={(e) => {
-                        e.currentTarget.style.background = '#25D366';
+                        e.currentTarget.style.background = '#176b45';
                         e.currentTarget.style.transform = 'translateY(0)';
                       }}
                     >

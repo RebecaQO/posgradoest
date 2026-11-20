@@ -24,7 +24,7 @@ export const ContactView = () => {
   const [info, setInfo] = useState({
     direccion: 'Calle 27 de Cota Cota s/n, Campus Universitario UMSA, Edif. Estadística (2do Piso)',
     telefono: '+591 (2) 279-2999',
-    whatsapp: '+591 76543210',
+    whatsapp: '',
     email_principal: 'estapost@fcpn.edu.bo',
     horario_atencion: 'Lunes a Viernes 08:30 a 16:30 (Continuo)',
     director_nombre: 'Dirección de la Carrera de Estadística y Posgrado'
@@ -96,7 +96,9 @@ export const ContactView = () => {
       val: info.whatsapp,
       desc: 'Orientación inmediata sobre convocatorias vigentes, aranceles y requisitos de postulación.',
       actionText: 'Enviar mensaje',
-      href: `https://wa.me/${(info.whatsapp || '').replace(/\D/g, '')}?text=${encodeURIComponent('Hola, deseo más información sobre los programas de posgrado de Estadística.')}`
+      href: String(info.whatsapp || '').replace(/\D/g, '').length >= 8
+        ? `https://wa.me/${String(info.whatsapp).replace(/\D/g, '')}?text=${encodeURIComponent('Hola, deseo más información sobre los programas de posgrado de Estadística.')}`
+        : ''
     },
     {
       type: 'phone',

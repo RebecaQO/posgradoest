@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { BriefcaseBusiness, Plus, RefreshCw, Save, X } from 'lucide-react';
 import { apiJson } from '../../../utils/api';
+import { useDialogAccessibility } from '../../../hooks/useDialogAccessibility';
 
 const FORMULARIO_VACIO = {
   nombre: '',
@@ -30,6 +31,7 @@ export default function PersonalAdministrativoPanel() {
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState('');
   const [aviso, setAviso] = useState('');
+  const dialogRef = useDialogAccessibility(modalAbierto, () => { if (!guardando) setModalAbierto(false); });
 
   const cargar = useCallback(async () => {
     setCargando(true);
@@ -129,9 +131,9 @@ export default function PersonalAdministrativoPanel() {
 
       {modalAbierto && (
         <div className="modal-overlay" onClick={() => !guardando && setModalAbierto(false)}>
-          <form className="modal-content" onSubmit={guardar} onClick={(evento) => evento.stopPropagation()} style={{ maxWidth: 760, padding: '1.5rem', maxHeight: '90vh', overflowY: 'auto' }}>
+          <form ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby="personal-dialog-title" tabIndex={-1} className="modal-content" onSubmit={guardar} onClick={(evento) => evento.stopPropagation()} style={{ maxWidth: 760, padding: '1.5rem', maxHeight: '90vh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-              <h3 style={{ margin: 0 }}>{registroId ? 'Editar personal administrativo' : 'Agregar personal administrativo'}</h3>
+              <h3 id="personal-dialog-title" style={{ margin: 0 }}>{registroId ? 'Editar personal administrativo' : 'Agregar personal administrativo'}</h3>
               <button type="button" className="btn btn-secondary btn-sm" onClick={() => setModalAbierto(false)} disabled={guardando} aria-label="Cerrar"><X size={16} /></button>
             </div>
             {error && <p role="alert" className="em-alert em-alert-error">{error}</p>}

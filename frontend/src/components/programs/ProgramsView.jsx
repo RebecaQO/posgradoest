@@ -17,6 +17,7 @@ import {
   RotateCcw
 } from 'lucide-react';
 import { programaService } from '../../services/programaService';
+import { useInstitutionWhatsApp } from '../../hooks/useInstitutionWhatsApp';
 
 import slide1 from '../../assets/images/carrusel/slide1.jpg';
 import slide2 from '../../assets/images/carrusel/slide2.jpg';
@@ -49,6 +50,7 @@ const getProgramCardBanner = (prog, idx) => {
 };
 
 export const ProgramsView = ({ onNavigateToAdmission, initialFilter = null, onSelectProgram }) => {
+  const whatsappUrl = useInstitutionWhatsApp('Hola, deseo más información sobre los programas de Posgrado en Estadística UMSA.');
   const [programs, setPrograms] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedProgram, setSelectedProgram] = useState(null);
@@ -228,7 +230,6 @@ export const ProgramsView = ({ onNavigateToAdmission, initialFilter = null, onSe
 
   const renderProgramCard = (prog, idx, isSuggested = false) => {
     const cardImg = getProgramCardBanner(prog, idx);
-    const formularioInscripcion = prog.enlace_formulario_inscripcion || prog.ediciones?.find((edicion) => edicion.formulario)?.formulario;
     const isMaster = (prog.type || '').toLowerCase().includes('maestr') ||
       prog.typeFilter === 'maestria' ||
       prog.typeFilter === 'terminal' ||
@@ -422,10 +423,10 @@ export const ProgramsView = ({ onNavigateToAdmission, initialFilter = null, onSe
           </div>
         </div>
 
-        {/* ── Acciones de la Tarjeta con Botón de Postular ── */}
+        {/* ── Acciones informativas del programa ── */}
         <div style={{
           display: 'grid',
-          gridTemplateColumns: formularioInscripcion ? '1fr 1fr auto' : '1fr auto',
+          gridTemplateColumns: '1fr auto',
           gap: '0.55rem',
           padding: '1rem 1.4rem 1.25rem',
           borderTop: '1px solid #f1f5f9',
@@ -453,50 +454,16 @@ export const ProgramsView = ({ onNavigateToAdmission, initialFilter = null, onSe
             <span>Más info</span>
           </a>
 
-          {/* Botón de Postular con tono institucional #1e5f35 */}
-          {formularioInscripcion && <a
-            href={formularioInscripcion}
-            target="_blank"
-            rel="noreferrer"
-            className="btn btn-sm"
-            style={{
-              background: '#1e5f35',
-              color: '#ffffff',
-              border: 'none',
-              borderRadius: '4px',
-              justifyContent: 'center',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.35rem',
-              fontSize: '0.82rem',
-              fontWeight: 700,
-              textDecoration: 'none',
-              boxShadow: '0 3px 10px rgba(30, 95, 53, 0.35)',
-              padding: '0.55rem 0.75rem',
-              transition: 'background 0.2s ease, transform 0.15s ease'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = '#164627';
-              e.currentTarget.style.transform = 'translateY(-1px)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = '#1e5f35';
-              e.currentTarget.style.transform = 'translateY(0)';
-            }}
-          >
-            <span>Postular</span>
-            <ArrowRight size={13} />
-          </a>}
-
           {/* WhatsApp directo */}
           <a
-            href={`https://wa.me/59176543210?text=${encodeURIComponent(`Hola, deseo más información sobre el programa: ${prog.title}`)}`}
+            href={whatsappUrl || undefined}
+            aria-disabled={!whatsappUrl}
             target="_blank"
             rel="noreferrer"
             title="Consultar por WhatsApp"
             className="btn btn-sm"
             style={{
-              background: '#25D366',
+              background: '#176b45',
               color: '#FFFFFF',
               border: 'none',
               borderRadius: '4px',
@@ -508,8 +475,8 @@ export const ProgramsView = ({ onNavigateToAdmission, initialFilter = null, onSe
               boxShadow: '0 2px 6px rgba(0, 0, 0, 0.15)',
               transition: 'background 0.18s ease'
             }}
-            onMouseEnter={(e) => e.currentTarget.style.background = '#20BA5A'}
-            onMouseLeave={(e) => e.currentTarget.style.background = '#25D366'}
+            onMouseEnter={(e) => e.currentTarget.style.background = '#125236'}
+            onMouseLeave={(e) => e.currentTarget.style.background = '#176b45'}
           >
             <MessageCircle size={16} color="#FFFFFF" strokeWidth={2.2} />
           </a>

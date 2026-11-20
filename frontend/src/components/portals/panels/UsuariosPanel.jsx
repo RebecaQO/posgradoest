@@ -306,7 +306,7 @@ export default function UsuariosPanel() {
 
               <div style={{ marginBottom: '1rem' }}>
                 <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.35rem' }}>
-                  Contraseña {editing ? '(Dejar vacía para conservar)' : '* (Mín. 8 caracteres)'}
+                  Contraseña {editing ? '(Dejar vacía para conservar; nueva: 12+ caracteres, mayúscula, minúscula, número y símbolo)' : '* (12+ caracteres, mayúscula, minúscula, número y símbolo)'}
                 </label>
                 <input
                   type="password"
@@ -315,7 +315,7 @@ export default function UsuariosPanel() {
                   value={form.password}
                   onChange={(e) => setForm({ ...form, password: e.target.value })}
                   required={!editing}
-                  minLength={8}
+                  minLength={12}
                 />
                 {fieldErrors.password && (
                   <p style={{ color: '#ef4444', fontSize: '0.8rem', margin: '0.25rem 0 0' }}>
