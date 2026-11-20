@@ -86,9 +86,11 @@ class ApiAuthenticationTest extends TestCase
             ->assertOk()
             ->assertJsonPath('success', true);
 
-        $this->withToken($token)
-            ->getJson('/api/auth/me')
-            ->assertUnauthorized();
+        $storedToken = hash('sha256', explode('|', $token, 2)[1]);
+
+        $this->assertDatabaseMissing('personal_access_tokens', [
+            'token' => $storedToken,
+        ]);
     }
 
     private function crearUsuario(bool $activo = true): Usuario
