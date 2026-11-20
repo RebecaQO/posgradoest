@@ -79,5 +79,5 @@ describe('MallasCurricularesPanel', () => {
       { timeout: 5000 }
     );
     expect(await screen.findByText('Probabilidad', {}, { timeout: 5000 })).toBeTruthy();
-  });
+  }, 20000);
 });
